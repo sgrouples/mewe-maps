@@ -1,0 +1,1 @@
+dart pub add dev:build_runner

@@ -1,0 +1,3 @@
+git_url("git@github.com:sgrouples/iOS-certificates.git")
+shallow_clone(true)
+storage_mode("git")

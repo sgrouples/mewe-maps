@@ -1,0 +1,27 @@
+<html>
+<head>
+    <script src="https://client-api.arkoselabs.com/fc/api/?onload=loadChallenge" async defer></script>
+</head>
+<body>
+<script type="text/javascript">
+        function loadChallenge() {
+            new ArkoseEnforcement({
+                public_key: "23C24999-3098-7CBD-4B1C-31492C428E74",
+                target_html: "CAPTCHA",
+                callback: function() {
+                    FlutterCallback.postMessage(document.getElementById("FunCaptcha-Token").value);
+                }
+            });
+        }
+     </script>
+<style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<div id="CAPTCHA"></div>
+</body>
+</html>

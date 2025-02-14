@@ -1,0 +1,266 @@
+=begin
+
+Before you start make sure that the CI environment is properly configured.
+1. Configure access to provisioning repository via SSH used in Matchfile (github.com:sgrouples/iOS-certificates.git)
+2. Configure environment variables used in the Fastfile, make sure that Fastlane can access them:
+    * APP_STORE_CONNECT_KEY_ID (more here: https://docs.fastlane.tools/actions/match/)
+    * APP_STORE_CONNECT_ISSUER_ID
+    * APP_STORE_CONNECT_API_KEY_B64
+    * KEYCHAIN_PASSWORD
+
+
+run "bundle exec fastlane lanes" to see available lanes.
+=end
+
+module BuildType
+  MASTER = 0
+end
+
+opt_out_usage
+fastlane_version "2.214.0"
+default_platform :ios
+fastlane_require 'dotenv'
+
+# Global constants
+build_path = "./build"
+derived_data_path = "./build/derivedData"
+tests_devices = ["iPhone 15"]
+commit_file_name = "last_success_commit"
+
+before_all do |options|
+  sh("rm -rf ../build")
+
+  if is_ci
+    unlock_keychain(
+      password: ENV["KEYCHAIN_PASSWORD"]
+    )
+  end
+
+  Dotenv.overload '../build.env'
+end
+
+desc "Updates certificates and profiles, no options."
+lane :generate_provisioning do
+  sync_match_adhoc()
+  sync_match_development()
+end
+
+desc """
+    Builds Location App target.
+
+    ##Options:
+
+    * display_name - will set the Consumer .plist display name.
+    * build_number - will set the Consumer .plist build number.
+    * scheme - scheme to build, default 'Consumer'
+    * configuration - scheme build configuration, default 'AdHoc'
+    * commitMessageKey - key required for the lane to execute
+
+    ##Example: usage:
+
+      bundle exec fastlane build scheme:\"Runner\" build_number:\"1.0.4\"
+    """
+lane :build do |options|
+  skip_docs
+
+  latest_release = firebase_app_distribution_get_latest_release(
+    app: get_firebase_app_id(),
+    service_credentials_file: get_service_credentials_file()
+  )
+  build_number = (latest_release&.dig(:buildVersion) || 0).to_i + 1
+
+  puts "Build number: #{build_number}"
+
+  update_project(
+    display_name: get_app_display_name(build_number: build_number),
+    build_number: build_number
+  )
+
+  build_location_app(
+    scheme: options[:scheme],
+    configuration: options[:configuration]
+  )
+end
+
+lane :upload do |options|
+  scheme = options[:scheme] || "Runner"
+
+  firebase_app_distribution(
+    app: get_firebase_app_id(),
+    ipa_path: "./#{scheme}.ipa",
+    groups: "ios-internal-testers",
+    release_notes: get_changelog(),
+    service_credentials_file: get_service_credentials_file()
+  )
+end
+
+# Match lanes
+private_lane :sync_match do |options|
+  api_key = app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_B64"],
+    is_key_content_base64: true,
+    duration: 500
+  )
+
+  sync_code_signing(
+    type: options[:type],
+    api_key: api_key,
+    readonly: options[:readonly],
+    app_identifier: options[:app_identifier],
+    force_for_new_devices: true,
+    verbose: true
+  )
+end
+
+desc "Download or recreate provisioning profiles for development"
+lane :sync_match_development do
+  sync_match(
+    type: "development",
+    app_identifier: [
+      "com.mewemaps.testing"
+    ],
+    readonly: false
+  )
+end
+
+desc "Download or recreate provisioning profiles for ad-hoc"
+lane :sync_match_adhoc do
+  sync_match(
+    type: "adhoc",
+    app_identifier: [
+      "com.mewemaps.testing"
+    ],
+    readonly: false
+  )
+end
+
+desc "Nuke and recreate certificates and provisioning profiles for development"
+lane :regenerate_match_development do
+  api_key = app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_B64"],
+    is_key_content_base64: true,
+    duration: 500,
+    in_house: false
+  )
+  app_identifier = [
+    "com.mewemaps.testing"
+  ]
+
+  # nuke distribution certificate and provisioning profile for development
+  match_nuke(
+    type: "development",
+    app_identifier: app_identifier,
+    api_key: api_key
+  )
+
+  # create distribution certificate and provisioning profile for development
+  match(
+    type: "development",
+    app_identifier: app_identifier,
+    api_key: api_key
+  )
+end
+
+# Private build lanes
+
+private_lane :build_location_app do |options|
+  # scheme = options[:scheme] || "Runner"
+  # gym(
+  #   project: "Runner.xcodeproj",
+  #   scheme: scheme,
+  #   configuration: options[:configuration] || "Release",
+  #   build_path: build_path,
+  #   derived_data_path: derived_data_path,
+  #   output_name: "#{scheme}.ipa",
+  #   #include_bitcode: false,
+  #   export_method: "ad-hoc",
+  #   #export_options: {
+  #   #  iCloudContainerEnvironment: "Production",
+  #   #},
+  #   xcodebuild_formatter: "xcbeautify"
+  # )
+  gym(
+      export_method: "ad-hoc",
+      export_options: {
+        provisioningProfiles: {
+          "com.mewemaps.testing" => "match AdHoc com.mewemaps.testing"
+        }
+      }
+    )
+end
+
+private_lane :update_project do |options|
+  if options[:display_name]
+    update_info_plist(
+      plist_path: "Runner/Info.plist",
+      display_name: options[:display_name]
+    )
+  end
+
+  if options[:build_number]
+    # CFBundleVersion should be a string
+
+    set_info_plist_value(
+      path: "Runner/Info.plist",
+      key: "CFBundleVersion",
+      value: options[:build_number].to_s
+    )
+  end
+end
+
+private_lane :get_firebase_app_id do
+  case build_type()
+    when BuildType::MASTER
+      next "1:587237664418:ios:08c9e5bb64c6e1df0d99fb"
+    else
+      next "1:587237664418:ios:08c9e5bb64c6e1df0d99fb"
+  end
+end
+
+private_lane :get_service_credentials_file do
+  puts "#{Dir.pwd}"
+  case build_type()
+    when BuildType::MASTER
+      next "#{Dir.pwd}/service-credentials-mewe-ios-location-master.json"
+    else
+      next "#{Dir.pwd}/service-credentials-mewe-ios-location-master.json"
+  end
+end
+
+private_lane :get_app_display_name do |options|
+  case build_type()
+    when BuildType::MASTER
+      next "Master-#{options[:build_number]}"
+    else
+      next "Unknown"
+  end
+end
+
+private_lane :get_changelog do
+  # Format:
+  # (commit_hash) [author] [date_short] commit_message
+
+  changelog = changelog_from_git_commits(
+    commits_count: 5,
+    pretty: "* (%h) [%aN] [%as] %s"
+  )
+
+  if changelog.to_s.length == 0
+    changelog = "No changes."
+  end
+
+  next changelog
+end
+
+def build_type
+  if ENV["GITHUB_REF_NAME"] == "master"
+    return BuildType::MASTER
+  end
+
+  return BuildType::MASTER
+end
+
