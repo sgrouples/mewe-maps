@@ -55,16 +55,6 @@ class DisplayOnTheMapChanged extends ContactsEvent {
   List<Object?> get props => [contact, value];
 }
 
-class ContactClicked extends ContactsEvent {
-  final User contact;
-  final BuildContext context;
-
-  ContactClicked(this.contact, this.context);
-
-  @override
-  List<Object?> get props => [contact, context];
-}
-
 class LogOutClicked extends ContactsEvent {
   final BuildContext context;
 
