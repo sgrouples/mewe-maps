@@ -8,17 +8,13 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:mewe_maps/main.dart';
 import 'package:mewe_maps/models/user.dart';
-import 'package:mewe_maps/models/user_position.dart';
 import 'package:mewe_maps/models/user_sharing_session.dart';
 import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
-import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
-import 'package:mewe_maps/repositories/map/map_controller_repository.dart';
-import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
-import 'package:mewe_maps/services/http/auth_constants.dart';
+import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
+import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 part 'contacts_bloc.g.dart';
 part 'contacts_event.dart';
@@ -27,21 +23,19 @@ part 'contacts_state.dart';
 const _TAG = 'ContactsBloc';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-  ContactsBloc(this._contactsRepository, this._mapControllerRepository,
+  ContactsBloc(this._contactsRepository,
       this._sharingLocationRepository, this._hiddenFromMapRepository)
       : super(const ContactsState(error: "")) {
     on<StartObservingData>(_loadContacts);
     on<ShareMyPositionStarted>(_startSharingPosition);
     on<ShareMyPositionStopped>(_stopSharingPosition);
     on<DisplayOnTheMapChanged>(_displayOnTheMapChanged);
-    on<ContactClicked>(_contactClicked);
     on<LogOutClicked>(_logOutClicked);
     on<ShareMyPositionChanged>(_shareMyPositionChanged);
     on<ContactLocationDataChanged>(_contactLocationDataChanged);
   }
 
   final ContactsRepository _contactsRepository;
-  final MapControllerRepository _mapControllerRepository;
   final SharingLocationRepository _sharingLocationRepository;
   final HiddenFromMapRepository _hiddenFromMapRepository;
 
@@ -81,9 +75,9 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _handleMySharingSessions(List<UserSharingSession> sharingSessions) {
     List<MyPositionSharing> myPositions =
-        sharingSessions.mapNotNull((session) {
+    sharingSessions.mapNotNull((session) {
       final contact = _contacts.firstOrNullWhere(
-          (contact) => contact.userId == session.recipientId);
+              (contact) => contact.userId == session.recipientId);
       if (contact == null) return null;
       return MyPositionSharing(
           contact: contact,
@@ -93,7 +87,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
     List<User> filteredContacts = _contacts
         .whereNot((contact) =>
-            sharingSessions.any((session) => session.recipientId == contact.userId))
+        sharingSessions.any((session) => session.recipientId == contact.userId))
         .toList();
     add(ShareMyPositionChanged(myPositions, filteredContacts));
   }
@@ -119,8 +113,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
             .observeContactsSharingData(StorageRepository.user!.userId)
             .startWith([]),
         _hiddenFromMapRepository.observeHiddenUsers().startWith([]),
-        (contactsSharingData, hiddenUsers) =>
-            (contactsSharingData, hiddenUsers)).listen((data) {
+            (contactsSharingData, hiddenUsers) =>
+        (contactsSharingData, hiddenUsers)).listen((data) {
       final contactLocationData = data.$1.map((sharingData) {
         return MapEntry(
           User.fromJson(jsonDecode(sharingData.userDataRaw)),
@@ -160,20 +154,6 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     } catch (error) {
       Logger.log(
           _TAG, "Failed to update display on the map. ${error.toString()}");
-    }
-  }
-
-  void _contactClicked(
-      ContactClicked event, Emitter<ContactsState> emit) async {
-    UserPosition? userPosition =
-        _mapControllerRepository.findUserPositionByUserId(event.contact.userId);
-    if (userPosition != null) {
-      _mapControllerRepository.moveToPosition(userPosition);
-      Navigator.of(event.context).pop();
-    } else {
-      final url = '${AuthConfig.meweHost}/${event.contact.publicLinkId}';
-      final uri = Uri.parse(url);
-      await launchUrl(uri);
     }
   }
 
