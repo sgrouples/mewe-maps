@@ -20,8 +20,7 @@ class MapPageState extends State<MapPage> {
 
   static const SHOULD_SHOW_CONTACTS_ON_START_KEY = "shouldShowContactsOnStart";
 
-  bool shouldShowContacts =
-      StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
+  bool shouldShowContacts = StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +31,28 @@ class MapPageState extends State<MapPage> {
         context.read(),
         context.read(),
       ),
-      child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
-        if (state.mapInitialized && shouldShowContacts) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showContactsModal(context);
-            StorageRepository.setFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
-          });
-        }
+      child: BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) => previous.showPermissionsRationale != current.showPermissionsRationale && current.showPermissionsRationale,
+        listener: (context, state) {
+          _showPermissionsRationale(context);
+        },
+        child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
+          if (state.mapInitialized && shouldShowContacts) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showContactsModal(context);
+              StorageRepository.setFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
+            });
+          }
 
-        _appLifecycleListener ??= AppLifecycleListener(
-          onResume: () => context.read<MapBloc>().add(ObserveMyPosition()),
-          onPause: () => context.read<MapBloc>().add(StopObservingMyPosition()),
-          onDetach: () => context.read<MapBloc>().add(StopObservingMyPosition()),
-        );
+          _appLifecycleListener ??= AppLifecycleListener(
+            onResume: () => context.read<MapBloc>().add(ObserveMyPosition()),
+            onPause: () => context.read<MapBloc>().add(StopObservingMyPosition()),
+            onDetach: () => context.read<MapBloc>().add(StopObservingMyPosition()),
+          );
 
-        return _buildPage(context, state);
-      }),
+          return _buildPage(context, state);
+        }),
+      ),
     );
   }
 
@@ -75,11 +80,7 @@ class MapPageState extends State<MapPage> {
 
     return Scaffold(
       body: Stack(
-        children: [
-          mapWidget,
-          if (!state.mapInitialized) const LoadingWidget(),
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())
-        ],
+        children: [mapWidget, if (!state.mapInitialized) const LoadingWidget(), Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())],
       ),
     );
   }
@@ -102,9 +103,38 @@ class MapPageState extends State<MapPage> {
     });
   }
 
-  Widget _buildBottom() => Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [_floatingActionButton(), const SelectedUserBottomView()]);
+  void _showPermissionsRationale(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Permissions Required"),
+          content: const Text(
+            "This app requires notifications and background location access "
+            "to function properly. Please grant these permissions for the best experience.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("CANCEL"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<MapBloc>().add(RequestAllPermissions());
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBottom() => Column(crossAxisAlignment: CrossAxisAlignment.end, children: [_floatingActionButton(), const SelectedUserBottomView()]);
 
   Widget _floatingActionButton() => BlocBuilder<MapBloc, MapState>(
         builder: (context, state) {

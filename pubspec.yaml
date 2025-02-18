@@ -63,6 +63,7 @@ dependencies:
   background_location_tracker:
     path: ./flutter-background-location-tracker
   workmanager: ^0.5.2
+  app_settings: ^5.2.0
 
 dev_dependencies:
   flutter_test:

@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:background_location_tracker/background_location_tracker.dart' as blt;
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/isolates.dart';
 import 'package:mewe_maps/services/location/location_sharing.dart';
+import 'package:mewe_maps/services/permissions/permissions.dart';
 import 'package:mewe_maps/utils/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 abstract class MyLocationRepository {
   Future<Position?> getLastKnownPosition();
@@ -41,7 +40,7 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
     if (await _handlePermission()) {
       return Geolocator.getLastKnownPosition();
     } else {
-      throw Exception('Permission denied');
+      return null;
     }
   }
 
@@ -82,8 +81,6 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
           .where((position) => position != null)
           .cast<Position>()
           .distinct();
-    } else {
-      throw Exception('Permission denied');
     }
   }
 
@@ -102,23 +99,7 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
     if (!serviceEnabled) {
       return false;
     }
-    if (defaultTargetPlatform == TargetPlatform.android &&
-        await Permission.notification.isDenied) {
-      PermissionStatus permission = await Permission.notification.request();
-      if (permission.isDenied) {
-        return false;
-      }
-    }
-    LocationPermission permission = await _geolocatorPlatform.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await _geolocatorPlatform.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return false;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      return false;
-    }
-    return true;
+
+    return await areAllPermissionsGranted();
   }
 }
