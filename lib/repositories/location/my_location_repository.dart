@@ -14,6 +14,7 @@ import 'package:background_location_tracker/background_location_tracker.dart'
     as blt;
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/isolates.dart';
+import 'package:mewe_maps/modules/app/app_lifecycle_tracker.dart';
 import 'package:mewe_maps/services/location/location_sharing.dart';
 import 'package:mewe_maps/services/permissions/permissions.dart';
 import 'package:mewe_maps/utils/logger.dart';
@@ -38,7 +39,11 @@ void backgroundLocationTrackerCallback() async {
   await initializeIsolate();
 
   blt.BackgroundLocationTrackerManager.handleBackgroundUpdated((data) async {
-    await shareMyLocationWithSessions(true);
+    if (!await shareMyLocationWithSessions(true) &&
+        !await AppLifecycleTracker.isAppVisible()) {
+      Logger.log(_TAG, "stopTracking in backgroundLocationTrackerCallback");
+      blt.BackgroundLocationTrackerManager.stopTracking();
+    }
   });
 }
 
@@ -82,9 +87,9 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
               )),
         );
         await blt.BackgroundLocationTrackerManager.startTracking();
-        Logger.log(_TAG, "precise tracking started");
+        Logger.log(_TAG, "Precise tracking started");
       } else {
-        Logger.log(_TAG, "already tracking precise location");
+        Logger.log(_TAG, "Already tracking precise location");
       }
 
       Position? initialPosition = await getLastKnownPosition();
@@ -104,6 +109,7 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
 
   @override
   Future<void> cancelObservingPrecisePosition() {
+    Logger.log(_TAG, "Precise tracking stopped");
     return blt.BackgroundLocationTrackerManager.stopTracking();
   }
 

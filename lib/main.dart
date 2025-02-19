@@ -10,13 +10,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:mewe_maps/isolates.dart';
+import 'package:mewe_maps/modules/app/app_lifecycle_tracker.dart';
 import 'package:mewe_maps/modules/app/view/app_page.dart';
 import 'package:mewe_maps/services/workmanager/workmanager.dart';
 
 void main() async {
   await initializeIsolate();
   await initializeNotPreciseBackgroundSharing();
-
+  AppLifecycleTracker().initObserver();
   runApp(const RestartWidget(child: AppPage()));
 }
 
