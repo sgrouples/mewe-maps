@@ -1,6 +1,17 @@
+// Copyright MeWe 2025.
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
 import 'dart:async';
 
-import 'package:background_location_tracker/background_location_tracker.dart' as blt;
+import 'package:background_location_tracker/background_location_tracker.dart'
+    as blt;
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/isolates.dart';
 import 'package:mewe_maps/services/location/location_sharing.dart';
@@ -32,7 +43,6 @@ void backgroundLocationTrackerCallback() async {
 }
 
 class MyLocationRepositoryImpl implements MyLocationRepository {
-
   final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
 
   @override
@@ -60,7 +70,8 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
               loggingEnabled: true,
               androidConfig: blt.AndroidConfig(
                 notificationIcon: 'ic_launcher',
-                trackingInterval: Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC),
+                trackingInterval:
+                    Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC),
                 distanceFilterMeters: _LOCATION_DISTANCE_FILTER_METERS_ANDROID,
                 enableCancelTrackingAction: false,
               ),
@@ -68,8 +79,7 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
                 activityType: blt.ActivityType.FITNESS,
                 distanceFilterMeters: _LOCATION_DISTANCE_FILTER_METERS_IOS,
                 restartAfterKill: true,
-              )
-          ),
+              )),
         );
         await blt.BackgroundLocationTrackerManager.startTracking();
         Logger.log(_TAG, "precise tracking started");
@@ -82,7 +92,9 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
         yield initialPosition;
       }
 
-      yield* Stream.periodic(const Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC), (_) => getLastKnownPosition())
+      yield* Stream.periodic(
+              const Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC),
+              (_) => getLastKnownPosition())
           .asyncMap((futurePosition) async => await futurePosition)
           .where((position) => position != null)
           .cast<Position>()
