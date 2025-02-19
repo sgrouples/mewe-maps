@@ -1,3 +1,13 @@
+// Copyright MeWe 2025.
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -116,16 +126,16 @@ class ContactsPage extends StatelessWidget {
   }
 
   Widget _buildMySharingLocationList() => BlocBuilder<ContactsBloc,
-      ContactsState>(
+          ContactsState>(
       buildWhen: (previous, current) =>
-      previous.shareMyPositionData != current.shareMyPositionData ||
+          previous.shareMyPositionData != current.shareMyPositionData ||
           previous.contacts != current.contacts ||
           previous.error != current.error,
       builder: (context, state) {
         if (state.error.isNotEmpty) {
           return Center(
               child:
-              Text(state.error, style: const TextStyle(color: Colors.red)));
+                  Text(state.error, style: const TextStyle(color: Colors.red)));
         }
 
         return ListView.builder(
@@ -138,9 +148,9 @@ class ContactsPage extends StatelessWidget {
                 user: sharingData.contact,
                 trailing: ContactSwitch(
                   value: true,
-                  switchText:
-                  sharingData.sharedUntil.year == 9999 ? "Until I stop" :
-                  "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                  switchText: sharingData.sharedUntil.year == 9999
+                      ? "Until I stop"
+                      : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
                   onChanged: (newValue) {
                     context.read<ContactsBloc>().add(
                         ShareMyPositionStopped(sharingData.sharingSessionId));
@@ -153,7 +163,7 @@ class ContactsPage extends StatelessWidget {
               return ContactListItem(
                   user: contact,
                   trailing: IconButton(
-                    onPressed: ()  async {
+                    onPressed: () async {
                       final minutes = await showIntervalModal(context, contact);
                       if (context.mounted) {
                         if (minutes != null) {
@@ -215,13 +225,13 @@ class ContactsPage extends StatelessWidget {
 
   Widget _buildSharedWithMeList() => BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
-      previous.contactLocationData != current.contactLocationData ||
+          previous.contactLocationData != current.contactLocationData ||
           previous.error != current.error,
       builder: (context, state) {
         if (state.error.isNotEmpty) {
           return Center(
               child:
-              Text(state.error, style: const TextStyle(color: Colors.red)));
+                  Text(state.error, style: const TextStyle(color: Colors.red)));
         }
 
         return ListView.builder(

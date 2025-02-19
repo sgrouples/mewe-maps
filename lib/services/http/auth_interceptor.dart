@@ -1,3 +1,13 @@
+// Copyright MeWe 2025.
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -8,7 +18,6 @@ import 'package:mewe_maps/services/http/model/auth_token_response.dart';
 import 'package:mewe_maps/utils/logger.dart';
 
 class AuthInterceptor extends Interceptor {
-
   static const String _AUTH_KEY = 'Authorization';
   static const String _COOKIE = 'Cookie';
   static const String _COOKIE_AUTH_HEADER = '@CookieAuth';
@@ -29,20 +38,25 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    if (!isMeweRequest(options.uri.host) || isCookieAuth(options) || isNoAuth(options)) {
+  void onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
+    if (!isMeweRequest(options.uri.host) ||
+        isCookieAuth(options) ||
+        isNoAuth(options)) {
       options.headers.remove(_COOKIE_AUTH_HEADER);
       options.headers.remove(_NO_AUTH_HEADER);
       return handler.next(options);
     }
 
-    if (options.uri.path.endsWith('/auth/login') || options.uri.path.endsWith('/account/challenges-available')) {
+    if (options.uri.path.endsWith('/auth/login') ||
+        options.uri.path.endsWith('/account/challenges-available')) {
       return handler.next(options);
     }
 
     if (options.uri.path.endsWith('/auth/token')) {
       AuthData authData = StorageRepository.authData!;
-      options.headers[_AUTH_KEY] = 'Sgrouples refreshToken=${authData.refreshToken}';
+      options.headers[_AUTH_KEY] =
+          'Sgrouples refreshToken=${authData.refreshToken}';
       return handler.next(options);
     }
 
@@ -53,7 +67,8 @@ class AuthInterceptor extends Interceptor {
     }
 
     AuthData authData = StorageRepository.authData!;
-    options.headers[_AUTH_KEY] = 'Sgrouples accessToken=${authData.accessToken}';
+    options.headers[_AUTH_KEY] =
+        'Sgrouples accessToken=${authData.accessToken}';
     options.headers[_COOKIE] = authData.cdnAccessParams.buildCdnCookie();
 
     return handler.next(options);
@@ -68,8 +83,10 @@ class AuthInterceptor extends Interceptor {
         StorageRepository.setAuthData(newAuthData);
         _tokenRefreshCompleter?.complete();
         final retryOptions = err.requestOptions;
-        retryOptions.headers[_AUTH_KEY] = 'Sgrouples accessToken=${newAuthData.accessToken}';
-        retryOptions.headers[_COOKIE] = newAuthData.cdnAccessParams.buildCdnCookie();
+        retryOptions.headers[_AUTH_KEY] =
+            'Sgrouples accessToken=${newAuthData.accessToken}';
+        retryOptions.headers[_COOKIE] =
+            newAuthData.cdnAccessParams.buildCdnCookie();
         final response = await _tokenRefreshDio.fetch(retryOptions);
         return handler.resolve(response);
       } catch (e) {
@@ -84,7 +101,9 @@ class AuthInterceptor extends Interceptor {
   }
 
   bool isMeweRequest(String host) {
-    return host.endsWith("mewe.com") || host.endsWith("groupl.es") || host.endsWith("sgr-labs.com");
+    return host.endsWith("mewe.com") ||
+        host.endsWith("groupl.es") ||
+        host.endsWith("sgr-labs.com");
   }
 
   bool isNoAuth(RequestOptions options) {

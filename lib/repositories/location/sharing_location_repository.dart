@@ -1,3 +1,13 @@
+// Copyright MeWe 2025.
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -37,7 +47,6 @@ const TIME_INTERVAL_FOREVER = -1;
 final MAX_SHARE_UNTIL = DateTime(9999, 12, 31);
 
 class SupabaseSharingLocationRepository implements SharingLocationRepository {
-
   final _supabase = Supabase.instance.client;
 
   @override
@@ -115,7 +124,8 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
     try {
       final response = await _supabase
           .from("sharing_sessions")
-          .select('id, recipient_id, recipient_user_data, share_until, is_precise')
+          .select(
+              'id, recipient_id, recipient_user_data, share_until, is_precise')
           .eq('owner_id', userId)
           .gte('share_until', DateTime.now().toIso8601String());
 
@@ -129,10 +139,10 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<void> startSharingSession(
-      User sharingUser, User recipientUser, int shareMinutes, bool isPrecise) async {
-    Logger.log(
-        _TAG, 'user: $sharingUser, recipient: $recipientUser, shareMinutes: $shareMinutes, isPrecise: $isPrecise');
+  Future<void> startSharingSession(User sharingUser, User recipientUser,
+      int shareMinutes, bool isPrecise) async {
+    Logger.log(_TAG,
+        'user: $sharingUser, recipient: $recipientUser, shareMinutes: $shareMinutes, isPrecise: $isPrecise');
     await _supabase
         .from('sharing_sessions')
         .delete()
@@ -164,7 +174,8 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<void> uploadPosition(Position position, List<UserSharingSession> sessions) {
+  Future<void> uploadPosition(
+      Position position, List<UserSharingSession> sessions) {
     try {
       List<Future> futures = [];
       for (var session in sessions) {

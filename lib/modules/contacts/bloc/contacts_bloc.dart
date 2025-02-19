@@ -1,3 +1,13 @@
+// Copyright MeWe 2025.
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -23,8 +33,8 @@ part 'contacts_state.dart';
 const _TAG = 'ContactsBloc';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-  ContactsBloc(this._contactsRepository,
-      this._sharingLocationRepository, this._hiddenFromMapRepository)
+  ContactsBloc(this._contactsRepository, this._sharingLocationRepository,
+      this._hiddenFromMapRepository)
       : super(const ContactsState(error: "")) {
     on<StartObservingData>(_loadContacts);
     on<ShareMyPositionStarted>(_startSharingPosition);
@@ -61,23 +71,23 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     _myPositionSubscription = _sharingLocationRepository
         .observeSharingSessionsAsOwner(StorageRepository.user!.userId)
         .startWith([]).listen((sharingSessions) {
-
       _handleMySharingSessions(sharingSessions);
     });
   }
 
   void _refreshSharingSessions() {
-    _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId).then((sharingSessions) {
+    _sharingLocationRepository
+        .getSharingSessionsAsOwner(StorageRepository.user!.userId)
+        .then((sharingSessions) {
       if (sharingSessions == null) return;
       _handleMySharingSessions(sharingSessions);
     });
   }
 
   void _handleMySharingSessions(List<UserSharingSession> sharingSessions) {
-    List<MyPositionSharing> myPositions =
-    sharingSessions.mapNotNull((session) {
-      final contact = _contacts.firstOrNullWhere(
-              (contact) => contact.userId == session.recipientId);
+    List<MyPositionSharing> myPositions = sharingSessions.mapNotNull((session) {
+      final contact = _contacts
+          .firstOrNullWhere((contact) => contact.userId == session.recipientId);
       if (contact == null) return null;
       return MyPositionSharing(
           contact: contact,
@@ -86,8 +96,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     }).toList();
 
     List<User> filteredContacts = _contacts
-        .whereNot((contact) =>
-        sharingSessions.any((session) => session.recipientId == contact.userId))
+        .whereNot((contact) => sharingSessions
+            .any((session) => session.recipientId == contact.userId))
         .toList();
     add(ShareMyPositionChanged(myPositions, filteredContacts));
   }
@@ -113,8 +123,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
             .observeContactsSharingData(StorageRepository.user!.userId)
             .startWith([]),
         _hiddenFromMapRepository.observeHiddenUsers().startWith([]),
-            (contactsSharingData, hiddenUsers) =>
-        (contactsSharingData, hiddenUsers)).listen((data) {
+        (contactsSharingData, hiddenUsers) =>
+            (contactsSharingData, hiddenUsers)).listen((data) {
       final contactLocationData = data.$1.map((sharingData) {
         return MapEntry(
           User.fromJson(jsonDecode(sharingData.userDataRaw)),

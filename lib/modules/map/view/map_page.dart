@@ -1,3 +1,13 @@
+// Copyright MeWe 2025.
+//
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
@@ -7,7 +17,7 @@ import 'package:mewe_maps/modules/map/bloc/map_bloc.dart';
 import 'package:mewe_maps/modules/map/view/components/loading_widget.dart';
 import 'package:mewe_maps/modules/map/view/components/location_tracking_icon.dart';
 import 'package:mewe_maps/modules/map/view/components/selected_user_bottom_view.dart';
-import 'package:mewe_maps/repositories/map/map_controller_manager.dart';
+import 'package:mewe_maps/modules/map/view/map_controller_manager.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 
 class MapPage extends StatefulWidget {
@@ -127,15 +137,15 @@ class MapPageState extends State<MapPage> {
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildShowPermissionListener() => BlocListener<MapBloc, MapState>(
-      listenWhen: (previous, current) =>
-      previous.showPermissionsRationale !=
-          current.showPermissionsRationale &&
-          current.showPermissionsRationale,
-      listener: (context, state) {
-        _showPermissionsRationale(context);
-      });
-
+  BlocListener<MapBloc, MapState> _buildShowPermissionListener() =>
+      BlocListener<MapBloc, MapState>(
+          listenWhen: (previous, current) =>
+              previous.showPermissionsRationale !=
+                  current.showPermissionsRationale &&
+              current.showPermissionsRationale,
+          listener: (context, state) {
+            _showPermissionsRationale(context);
+          });
 
   MapControllerManager _buildMapControllerManager(BuildContext context) {
     return MapControllerManager(
