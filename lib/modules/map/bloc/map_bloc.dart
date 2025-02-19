@@ -7,14 +7,12 @@ import 'package:dartx/dartx.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/models/user_position.dart';
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
-import 'package:mewe_maps/repositories/map/map_controller_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
 import 'package:mewe_maps/services/permissions/permissions.dart';
@@ -30,20 +28,20 @@ const _TAG = 'MapBloc';
 class MapBloc extends Bloc<MapEvent, MapState> {
   final MyLocationRepository _myLocationRepository;
   final SharingLocationRepository _sharingLocationRepository;
-  final MapControllerRepository _mapControllerRepository;
   final HiddenFromMapRepository _hiddenFromMapRepository;
 
   StreamSubscription? _myPositionSubscription;
   StreamSubscription? _contactsLocationsSubscription;
 
-  MapBloc(this._myLocationRepository, this._sharingLocationRepository, this._mapControllerRepository, this._hiddenFromMapRepository)
+  MapBloc(this._myLocationRepository, this._sharingLocationRepository,
+      this._hiddenFromMapRepository)
       : super(const MapState(mapInitialized: false)) {
     on<InitEvent>(_init);
     on<ObserveMyPosition>(
-      (event, emit) => _observeMyPosition(),
+          (event, emit) => _observeMyPosition(),
     );
     on<StopObservingMyPosition>(
-      (event, emit) => _stopObservingMyPosition(),
+          (event, emit) => _stopObservingMyPosition(),
     );
     on<ShowPermissionsRationale>(_showPermissionsRationale);
     on<RequestAllPermissions>(_requestAllPermissions);
@@ -51,26 +49,19 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<UpdateContactsLocation>(_updateContactsPositions);
     on<OpenMeWeClicked>(_openMeWeClicked);
     on<NavigateClicked>(_navigateClicked);
-    on<GeopointClicked>(_geopointClicked);
+    on<UserClicked>(_userClicked);
+    on<UserSelectedFromContacts>(_userSelectedFromContacts);
     on<CloseSelectedUser>(_closeSelectedUser);
     on<PreviousUserClicked>(_previousUserClicked);
     on<NextUserClicked>(_nextUserClicked);
+    on<TrackMyPositionClicked>(_trackMyPositionClicked);
+    on<TrackSelectedUserClicked>(_trackSelectedUserClicked);
   }
 
   void _init(InitEvent event, Emitter<MapState> emit) async {
     _observeContactsPosition();
-    _observeMapSingleTap();
     _observeMyPosition();
     emit(state.copyWith(mapInitialized: true));
-  }
-
-  void _observeMapSingleTap() {
-    _mapControllerRepository.mapController.listenerMapSingleTapping.addListener(() {
-      final geoPoint = _mapControllerRepository.mapController.listenerMapSingleTapping.value;
-      if (geoPoint != null) {
-        add(CloseSelectedUser());
-      }
-    });
   }
 
   void _observeMyPosition() async {
@@ -78,10 +69,12 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       add(ShowPermissionsRationale());
     } else {
       _myPositionSubscription = _myLocationRepository.observePrecisePosition().listen((position) {
-        final up = UserPosition(user: StorageRepository.user!, position: position, timestamp: position.timestamp);
-        add(UpdateMyPosition(up));
-      });
-    }
+          final up = UserPosition(
+              user: StorageRepository.user!,
+              position: position,
+              timestamp: position.timestamp);
+          add(UpdateMyPosition(up));
+        });}
   }
 
   void _stopObservingMyPosition() async {
@@ -97,7 +90,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     _contactsLocationsSubscription = CombineLatestStream.combine2(
         _sharingLocationRepository.observeContactsSharingData(StorageRepository.user!.userId),
         _hiddenFromMapRepository.observeHiddenUsers(),
-        (contactsSharingData, hiddenUsers) => (contactsSharingData, hiddenUsers)).listen((data) {
+            (contactsSharingData, hiddenUsers) =>
+        (contactsSharingData, hiddenUsers)).listen((data) {
       List<UserPosition> contactsLocations = [];
 
       for (final sharingData in data.$1) {
@@ -106,7 +100,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         }
         contactsLocations.add(UserPosition(
           user: User.fromJson(jsonDecode(sharingData.userDataRaw)),
-          position: Position.fromMap(jsonDecode(sharingData.data.positionDataRaw)),
+          position:
+          Position.fromMap(jsonDecode(sharingData.data.positionDataRaw)),
           timestamp: sharingData.data.updatedAt,
           shareUntil: sharingData.shareUntil,
         ));
@@ -130,30 +125,19 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _updateMyPosition(UpdateMyPosition event, Emitter<MapState> emit) async {
-    UserPosition? currentPosition = _mapControllerRepository.myPosition;
-    UserPosition? newPosition = event.position;
-    if (currentPosition == null && newPosition == null) {
-      return;
-    }
-    if (state.selectedUser != null && state.selectedUser == currentPosition) {
-      emit(state.copyWith(selectedUser: newPosition));
-    }
-    _mapControllerRepository.displayMyPosition(newPosition);
+    emit(state.copyWith(myPosition: event.position));
   }
 
-  void _updateContactsPositions(UpdateContactsLocation event, Emitter<MapState> emit) async {
-    List<UserPosition>? currentPositions = _mapControllerRepository.contactsPositions;
-    List<UserPosition> newPositions = event.positions;
-    if (currentPositions.isEmpty && newPositions.isEmpty) {
-      return;
-    }
+  void _updateContactsPositions(
+      UpdateContactsLocation event, Emitter<MapState> emit) async {
     if (state.selectedUser != null) {
-      final selectedUser = newPositions.firstOrNullWhere((element) => element.user.userId == state.selectedUser!.user.userId);
+      final selectedUser = event.positions.firstOrNullWhere(
+              (element) => element.user.userId == state.selectedUser!.user.userId);
       if (selectedUser != null) {
         emit(state.copyWith(selectedUser: selectedUser));
       }
     }
-    _mapControllerRepository.displayContactsPositions(newPositions);
+    emit(state.copyWith(contactsPositions: event.positions));
   }
 
   void _openMeWeClicked(OpenMeWeClicked event, Emitter<MapState> emit) async {
@@ -175,17 +159,44 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _closeSelectedUser(CloseSelectedUser event, Emitter<MapState> emit) async {
     emit(state.copyWith(selectedUser: null));
+    if (state.trackingState == TrackingState.selectedUser) {
+      emit(state.copyWith(trackingState: TrackingState.notTracking));
+    }
   }
 
-  void _geopointClicked(GeopointClicked event, Emitter<MapState> emit) async {
-    final userPosition = _mapControllerRepository.findUserPosition(event.geoPoint);
-    if (state.selectedUser == userPosition) {
-      emit(state.copyWith(selectedUser: null));
+  void _trackMyPositionClicked(
+      TrackMyPositionClicked event, Emitter<MapState> emit) async {
+    if (state.trackingState == TrackingState.myPosition) {
+      emit(state.copyWith(trackingState: TrackingState.notTracking));
     } else {
-      emit(state.copyWith(selectedUser: userPosition));
+      emit(state.copyWith(trackingState: TrackingState.myPosition));
     }
-    if (state.selectedUser != null) {
-      _mapControllerRepository.moveToPosition(state.selectedUser!);
+  }
+
+  void _trackSelectedUserClicked(
+      TrackSelectedUserClicked event, Emitter<MapState> emit) async {
+    if (state.trackingState == TrackingState.selectedUser) {
+      emit(state.copyWith(trackingState: TrackingState.notTracking));
+    } else {
+      emit(state.copyWith(trackingState: TrackingState.selectedUser));
+    }
+  }
+
+  void _userClicked(UserClicked event, Emitter<MapState> emit) async {
+    if (state.selectedUser?.user == event.userPosition.user) {
+      emit(state.copyWith(selectedUser: null, trackingState: TrackingState.notTracking));
+    } else {
+      emit(state.copyWith(selectedUser: event.userPosition, trackingState: TrackingState.selectedUser));
+    }
+  }
+
+  void _userSelectedFromContacts(
+      UserSelectedFromContacts event, Emitter<MapState> emit) async {
+    final position = state.contactsPositions.firstOrNullWhere(
+            (position) => position.user.userId == event.user.userId) ??
+        (event.user == StorageRepository.user ? state.myPosition : null);
+    if (position != null) {
+      emit(state.copyWith(selectedUser: position, trackingState: TrackingState.selectedUser));
     }
   }
 
@@ -198,13 +209,13 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _changeUser(Emitter<MapState> emit, int change) {
-    final allUsers = [..._mapControllerRepository.contactsPositions, _mapControllerRepository.myPosition].whereNotNull().toList();
-    if (allUsers.length <= 1) return;
-    final currentIndex = allUsers.indexWhere((element) => element.user.userId == state.selectedUser!.user.userId);
+    if (state.contactsPositions.length <= 1) return;
+    final currentIndex = state.contactsPositions.indexWhere(
+            (element) => element.user.userId == state.selectedUser!.user.userId);
     int newIndex = state.selectedUser == null ? 0 : currentIndex + change;
-    if (newIndex < 0) newIndex = allUsers.length - 1;
-    if (newIndex > allUsers.length - 1) newIndex = 0;
-    add(GeopointClicked(allUsers[newIndex].geoPoint));
+    if (newIndex < 0) newIndex = state.contactsPositions.length - 1;
+    if (newIndex > state.contactsPositions.length - 1) newIndex = 0;
+    add(UserClicked(state.contactsPositions[newIndex]));
   }
 
   @override

@@ -6,10 +6,9 @@ import 'package:mewe_maps/modules/common/view/components/user_avatar.dart';
 import 'package:mewe_maps/modules/contacts/bloc/contacts_bloc.dart';
 import 'package:mewe_maps/modules/contacts/view/components/contact_list_item.dart';
 import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
-import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
-import 'package:mewe_maps/repositories/map/map_controller_repository.dart';
-import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
+import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
+import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 
 class ContactsPage extends StatelessWidget {
   const ContactsPage({super.key});
@@ -19,7 +18,6 @@ class ContactsPage extends StatelessWidget {
     return BlocProvider(
       create: (BuildContext context) => ContactsBloc(
         context.read<ContactsRepository>(),
-        context.read<MapControllerRepository>(),
         context.read<SharingLocationRepository>(),
         context.read<HiddenFromMapRepository>(),
       )..add(StartObservingData()),
@@ -59,8 +57,7 @@ class ContactsPage extends StatelessWidget {
                         children: [
                           IconButton(
                             onPressed: () {
-                              context.read<ContactsBloc>().add(ContactClicked(
-                                  StorageRepository.user!, context));
+                              Navigator.of(context).pop(StorageRepository.user);
                             },
                             icon: UserAvatar(
                               user: StorageRepository.user!,
@@ -119,16 +116,16 @@ class ContactsPage extends StatelessWidget {
   }
 
   Widget _buildMySharingLocationList() => BlocBuilder<ContactsBloc,
-          ContactsState>(
+      ContactsState>(
       buildWhen: (previous, current) =>
-          previous.shareMyPositionData != current.shareMyPositionData ||
+      previous.shareMyPositionData != current.shareMyPositionData ||
           previous.contacts != current.contacts ||
           previous.error != current.error,
       builder: (context, state) {
         if (state.error.isNotEmpty) {
           return Center(
               child:
-                  Text(state.error, style: const TextStyle(color: Colors.red)));
+              Text(state.error, style: const TextStyle(color: Colors.red)));
         }
 
         return ListView.builder(
@@ -143,7 +140,7 @@ class ContactsPage extends StatelessWidget {
                   value: true,
                   switchText:
                   sharingData.sharedUntil.year == 9999 ? "Until I stop" :
-                      "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                  "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
                   onChanged: (newValue) {
                     context.read<ContactsBloc>().add(
                         ShareMyPositionStopped(sharingData.sharingSessionId));
@@ -218,13 +215,13 @@ class ContactsPage extends StatelessWidget {
 
   Widget _buildSharedWithMeList() => BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
-          previous.contactLocationData != current.contactLocationData ||
+      previous.contactLocationData != current.contactLocationData ||
           previous.error != current.error,
       builder: (context, state) {
         if (state.error.isNotEmpty) {
           return Center(
               child:
-                  Text(state.error, style: const TextStyle(color: Colors.red)));
+              Text(state.error, style: const TextStyle(color: Colors.red)));
         }
 
         return ListView.builder(
@@ -235,7 +232,7 @@ class ContactsPage extends StatelessWidget {
             return ContactListItem(
               user: contact,
               onTapped: () {
-                context.read<ContactsBloc>().add(ContactClicked(contact, context));
+                Navigator.of(context).pop(contact);
               },
               trailing: ContactSwitch(
                 value: state.contactLocationData![contact]!,

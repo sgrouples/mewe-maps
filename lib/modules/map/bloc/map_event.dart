@@ -34,8 +34,8 @@ class UpdateMyPosition extends MapEvent {
 
   @override
   List<Object?> get props => [
-        [position]
-      ];
+    [position]
+  ];
 }
 
 class UpdateContactsLocation extends MapEvent {
@@ -65,19 +65,35 @@ class NavigateClicked extends MapEvent {
   List<Object?> get props => [userPosition];
 }
 
-class GeopointClicked extends MapEvent {
-  final GeoPoint geoPoint;
+class UserClicked extends MapEvent {
+  final UserPosition userPosition;
 
-  GeopointClicked(this.geoPoint);
+  UserClicked(this.userPosition);
 
   @override
-  List<Object?> get props => [geoPoint];
+  List<Object?> get props => [userPosition];
+}
+
+class UserSelectedFromContacts extends MapEvent {
+  final User user;
+
+  UserSelectedFromContacts(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class TrackMyPositionClicked extends MapEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class TrackSelectedUserClicked extends MapEvent {
+  @override
+  List<Object?> get props => [];
 }
 
 class CloseSelectedUser extends MapEvent {
-
-  CloseSelectedUser();
-
   @override
   List<Object?> get props => [];
 }

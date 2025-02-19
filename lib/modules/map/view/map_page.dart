@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/modules/contacts/view/contacts_page.dart';
 import 'package:mewe_maps/modules/map/bloc/map_bloc.dart';
 import 'package:mewe_maps/modules/map/view/components/loading_widget.dart';
+import 'package:mewe_maps/modules/map/view/components/location_tracking_icon.dart';
 import 'package:mewe_maps/modules/map/view/components/selected_user_bottom_view.dart';
-import 'package:mewe_maps/repositories/map/map_controller_repository.dart';
+import 'package:mewe_maps/repositories/map/map_controller_manager.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 
 class MapPage extends StatefulWidget {
@@ -20,7 +22,8 @@ class MapPageState extends State<MapPage> {
 
   static const SHOULD_SHOW_CONTACTS_ON_START_KEY = "shouldShowContactsOnStart";
 
-  bool shouldShowContacts = StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
+  bool shouldShowContacts =
+      StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
 
   @override
   Widget build(BuildContext context) {
@@ -29,30 +32,117 @@ class MapPageState extends State<MapPage> {
         context.read(),
         context.read(),
         context.read(),
-        context.read(),
       ),
-      child: BlocListener<MapBloc, MapState>(
-        listenWhen: (previous, current) => previous.showPermissionsRationale != current.showPermissionsRationale && current.showPermissionsRationale,
+      child: RepositoryProvider(
+        create: (context) => _buildMapControllerManager(context),
+        child: MultiBlocListener(
+          listeners: [
+            _buildTrackingListener(),
+            _buildMyPositionListenerListener(),
+            _buildContactsPositionsListener(),
+            _buildSelectedUserListener(),
+            _buildShowPermissionListener()
+          ],
+          child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
+            if (state.mapInitialized && shouldShowContacts) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showContactsModal(context).then((selectedUser) {
+                  if (context.mounted && selectedUser != null) {
+                    context
+                        .read<MapBloc>()
+                        .add(UserSelectedFromContacts(selectedUser));
+                  }
+                });
+                StorageRepository.setFlag(
+                    SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
+              });
+            }
+
+            _appLifecycleListener ??= AppLifecycleListener(
+              onResume: () => context.read<MapBloc>().add(ObserveMyPosition()),
+              onPause: () =>
+                  context.read<MapBloc>().add(StopObservingMyPosition()),
+              onDetach: () =>
+                  context.read<MapBloc>().add(StopObservingMyPosition()),
+            );
+
+            return _buildPage(context, state);
+          }),
+        ),
+      ),
+    );
+  }
+
+  BlocListener<MapBloc, MapState> _buildTrackingListener() =>
+      BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) =>
+            previous.trackingState != current.trackingState ||
+            previous.myPosition != current.myPosition ||
+            previous.selectedUser != current.selectedUser,
         listener: (context, state) {
-          _showPermissionsRationale(context);
-        },
-        child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
-          if (state.mapInitialized && shouldShowContacts) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showContactsModal(context);
-              StorageRepository.setFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
-            });
+          if (state.trackingState == TrackingState.myPosition) {
+            context
+                .read<MapControllerManager>()
+                .setTrackingUser(state.myPosition);
+          } else if (state.trackingState == TrackingState.selectedUser) {
+            context
+                .read<MapControllerManager>()
+                .setTrackingUser(state.selectedUser);
+          } else {
+            context.read<MapControllerManager>().setTrackingUser(null);
           }
+        },
+      );
 
-          _appLifecycleListener ??= AppLifecycleListener(
-            onResume: () => context.read<MapBloc>().add(ObserveMyPosition()),
-            onPause: () => context.read<MapBloc>().add(StopObservingMyPosition()),
-            onDetach: () => context.read<MapBloc>().add(StopObservingMyPosition()),
-          );
+  BlocListener<MapBloc, MapState> _buildMyPositionListenerListener() =>
+      BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) =>
+            previous.myPosition != current.myPosition,
+        listener: (context, state) {
+          context.read<MapControllerManager>().setMyPosition(state.myPosition);
+        },
+      );
 
-          return _buildPage(context, state);
-        }),
-      ),
+  BlocListener<MapBloc, MapState> _buildContactsPositionsListener() =>
+      BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) =>
+            previous.contactsPositions != current.contactsPositions,
+        listener: (context, state) {
+          context
+              .read<MapControllerManager>()
+              .setContactsPositions(state.contactsPositions);
+        },
+      );
+
+  BlocListener<MapBloc, MapState> _buildSelectedUserListener() =>
+      BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) =>
+            previous.selectedUser?.user != current.selectedUser?.user,
+        listener: (context, state) {
+          if (state.selectedUser != null) {
+            context
+                .read<MapControllerManager>()
+                .moveToUser(state.selectedUser!);
+          }
+        },
+      );
+
+  BlocListener<MapBloc, MapState> _buildShowPermissionListener() => BlocListener<MapBloc, MapState>(
+      listenWhen: (previous, current) =>
+      previous.showPermissionsRationale !=
+          current.showPermissionsRationale &&
+          current.showPermissionsRationale,
+      listener: (context, state) {
+        _showPermissionsRationale(context);
+      });
+
+
+  MapControllerManager _buildMapControllerManager(BuildContext context) {
+    return MapControllerManager(
+      context.read(),
+      onUserTap: (userPosition) =>
+          context.read<MapBloc>().add(UserClicked(userPosition)),
+      onMapSingleTap: () => context.read<MapBloc>().add(CloseSelectedUser()),
     );
   }
 
@@ -63,10 +153,8 @@ class MapPageState extends State<MapPage> {
   }
 
   Widget _buildPage(BuildContext context, MapState state) {
-    final mapControllerRepository = context.read<MapControllerRepository>();
-    final mapController = mapControllerRepository.mapController;
     final mapWidget = OSMFlutter(
-      controller: mapController,
+      controller: context.read<MapControllerManager>().mapController,
       onMapIsReady: (value) {
         if (value) context.read<MapBloc>().add(InitEvent());
       },
@@ -74,19 +162,26 @@ class MapPageState extends State<MapPage> {
         showZoomController: true,
       ),
       onGeoPointClicked: (geoPoint) {
-        context.read<MapBloc>().add(GeopointClicked(geoPoint));
+        context.read<MapControllerManager>().tapGeopoint(geoPoint);
       },
     );
 
     return Scaffold(
       body: Stack(
-        children: [mapWidget, if (!state.mapInitialized) const LoadingWidget(), Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())],
+        children: [
+          mapWidget,
+          if (!state.mapInitialized) const LoadingWidget(),
+          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())
+        ],
       ),
     );
   }
 
-  void _showContactsModal(BuildContext context) {
-    showModalBottomSheet(
+  Future<User?> _showContactsModal(BuildContext context) async {
+    setState(() {
+      shouldShowContacts = false;
+    });
+    return await showModalBottomSheet<User>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -97,11 +192,14 @@ class MapPageState extends State<MapPage> {
         return const ContactsPage();
       },
     );
-
-    setState(() {
-      shouldShowContacts = false;
-    });
   }
+
+  Widget _buildBottom() =>
+      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        _trackingFloatingActionButton(),
+        _contactsFloatingActionButton(),
+        const SelectedUserBottomView()
+      ]);
 
   void _showPermissionsRationale(BuildContext context) {
     showDialog(
@@ -134,19 +232,35 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildBottom() => Column(crossAxisAlignment: CrossAxisAlignment.end, children: [_floatingActionButton(), const SelectedUserBottomView()]);
-
-  Widget _floatingActionButton() => BlocBuilder<MapBloc, MapState>(
+  Widget _contactsFloatingActionButton() => BlocBuilder<MapBloc, MapState>(
         builder: (context, state) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: FloatingActionButton(
+              heroTag: "contacts_fab",
               onPressed: () {
                 setState(() {
                   shouldShowContacts = true;
                 });
               },
               child: const Icon(Icons.contacts),
+            ),
+          );
+        },
+      );
+
+  Widget _trackingFloatingActionButton() => BlocBuilder<MapBloc, MapState>(
+        builder: (context, state) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: FloatingActionButton(
+              heroTag: "tracking_fab",
+              onPressed: () {
+                context.read<MapBloc>().add(TrackMyPositionClicked());
+              },
+              backgroundColor: Colors.white,
+              child: LocationTrackingIcon(
+                  state.trackingState == TrackingState.myPosition),
             ),
           );
         },

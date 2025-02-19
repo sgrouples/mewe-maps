@@ -6,7 +6,6 @@ import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
-import 'package:mewe_maps/repositories/map/map_controller_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
 import 'package:mewe_maps/services/http/auth_interceptor.dart';
 import 'package:mewe_maps/services/http/image_downloader.dart';
@@ -35,11 +34,6 @@ List<RepositoryProvider> repositoryProviders = [
   ),
   RepositoryProvider<ImageDownloader>(
     create: (context) => ImageDownloader(),
-  ),
-  RepositoryProvider<MapControllerRepository>(
-    create: (context) => MapControllerRepository(
-      RepositoryProvider.of<ImageDownloader>(context),
-    ),
   ),
   RepositoryProvider<ContactsRepository>(
       create: (context) => MeWeContactsRepository(

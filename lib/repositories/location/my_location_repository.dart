@@ -37,9 +37,15 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
 
   @override
   Future<Position?> getLastKnownPosition() async {
-    if (await _handlePermission()) {
-      return Geolocator.getLastKnownPosition();
-    } else {
+    try {
+      if (await _handlePermission()) {
+        return Geolocator.getLastKnownPosition();
+      } else {
+        Logger.log(_TAG, "Get last known location fails. Permission Denied");
+        return null;
+      }
+    } catch (e) {
+      Logger.log(_TAG, "Get last known location fails. $e");
       return null;
     }
   }
