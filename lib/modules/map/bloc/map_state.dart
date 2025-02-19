@@ -4,6 +4,7 @@ part of 'map_bloc.dart';
 class MapState extends Equatable {
   const MapState({
     required this.mapInitialized,
+    this.showPermissionsRationale = false,
     this.selectedUser,
     this.myPosition,
     this.contactsPositions = const [],
@@ -11,6 +12,7 @@ class MapState extends Equatable {
   });
 
   final bool mapInitialized;
+  final bool showPermissionsRationale;
   final UserPosition? selectedUser;
 
   final UserPosition? myPosition;
@@ -18,7 +20,7 @@ class MapState extends Equatable {
   final TrackingState trackingState;
 
   @override
-  List<Object?> get props => [mapInitialized, selectedUser, myPosition, contactsPositions, trackingState];
+  List<Object?> get props => [mapInitialized, showPermissionsRationale, selectedUser, myPosition, contactsPositions, trackingState];
 }
 
 enum TrackingState {

@@ -23,7 +23,7 @@ class MapPageState extends State<MapPage> {
   static const SHOULD_SHOW_CONTACTS_ON_START_KEY = "shouldShowContactsOnStart";
 
   bool shouldShowContacts =
-  StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
+      StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +41,7 @@ class MapPageState extends State<MapPage> {
             _buildMyPositionListenerListener(),
             _buildContactsPositionsListener(),
             _buildSelectedUserListener(),
+            _buildShowPermissionListener()
           ],
           child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
             if (state.mapInitialized && shouldShowContacts) {
@@ -75,7 +76,7 @@ class MapPageState extends State<MapPage> {
   BlocListener<MapBloc, MapState> _buildTrackingListener() =>
       BlocListener<MapBloc, MapState>(
         listenWhen: (previous, current) =>
-        previous.trackingState != current.trackingState ||
+            previous.trackingState != current.trackingState ||
             previous.myPosition != current.myPosition ||
             previous.selectedUser != current.selectedUser,
         listener: (context, state) {
@@ -96,7 +97,7 @@ class MapPageState extends State<MapPage> {
   BlocListener<MapBloc, MapState> _buildMyPositionListenerListener() =>
       BlocListener<MapBloc, MapState>(
         listenWhen: (previous, current) =>
-        previous.myPosition != current.myPosition,
+            previous.myPosition != current.myPosition,
         listener: (context, state) {
           context.read<MapControllerManager>().setMyPosition(state.myPosition);
         },
@@ -105,7 +106,7 @@ class MapPageState extends State<MapPage> {
   BlocListener<MapBloc, MapState> _buildContactsPositionsListener() =>
       BlocListener<MapBloc, MapState>(
         listenWhen: (previous, current) =>
-        previous.contactsPositions != current.contactsPositions,
+            previous.contactsPositions != current.contactsPositions,
         listener: (context, state) {
           context
               .read<MapControllerManager>()
@@ -116,7 +117,7 @@ class MapPageState extends State<MapPage> {
   BlocListener<MapBloc, MapState> _buildSelectedUserListener() =>
       BlocListener<MapBloc, MapState>(
         listenWhen: (previous, current) =>
-        previous.selectedUser?.user != current.selectedUser?.user,
+            previous.selectedUser?.user != current.selectedUser?.user,
         listener: (context, state) {
           if (state.selectedUser != null) {
             context
@@ -125,6 +126,16 @@ class MapPageState extends State<MapPage> {
           }
         },
       );
+
+  BlocListener<MapBloc, MapState> _buildShowPermissionListener() => BlocListener<MapBloc, MapState>(
+      listenWhen: (previous, current) =>
+      previous.showPermissionsRationale !=
+          current.showPermissionsRationale &&
+          current.showPermissionsRationale,
+      listener: (context, state) {
+        _showPermissionsRationale(context);
+      });
+
 
   MapControllerManager _buildMapControllerManager(BuildContext context) {
     return MapControllerManager(
@@ -190,37 +201,68 @@ class MapPageState extends State<MapPage> {
         const SelectedUserBottomView()
       ]);
 
+  void _showPermissionsRationale(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Permissions Required"),
+          content: const Text(
+            "This app requires notifications and background location access "
+            "to function properly. Please grant these permissions for the best experience.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("CANCEL"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<MapBloc>().add(RequestAllPermissions());
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _contactsFloatingActionButton() => BlocBuilder<MapBloc, MapState>(
-    builder: (context, state) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: FloatingActionButton(
-          heroTag: "contacts_fab",
-          onPressed: () {
-            setState(() {
-              shouldShowContacts = true;
-            });
-          },
-          child: const Icon(Icons.contacts),
-        ),
+        builder: (context, state) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: FloatingActionButton(
+              heroTag: "contacts_fab",
+              onPressed: () {
+                setState(() {
+                  shouldShowContacts = true;
+                });
+              },
+              child: const Icon(Icons.contacts),
+            ),
+          );
+        },
       );
-    },
-  );
 
   Widget _trackingFloatingActionButton() => BlocBuilder<MapBloc, MapState>(
-    builder: (context, state) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: FloatingActionButton(
-          heroTag: "tracking_fab",
-          onPressed: () {
-            context.read<MapBloc>().add(TrackMyPositionClicked());
-          },
-          backgroundColor: Colors.white,
-          child: LocationTrackingIcon(
-              state.trackingState == TrackingState.myPosition),
-        ),
+        builder: (context, state) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: FloatingActionButton(
+              heroTag: "tracking_fab",
+              onPressed: () {
+                context.read<MapBloc>().add(TrackMyPositionClicked());
+              },
+              backgroundColor: Colors.white,
+              child: LocationTrackingIcon(
+                  state.trackingState == TrackingState.myPosition),
+            ),
+          );
+        },
       );
-    },
-  );
 }

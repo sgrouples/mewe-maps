@@ -15,6 +15,7 @@ import 'package:mewe_maps/repositories/location/sharing_location_repository.dart
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
+import 'package:mewe_maps/services/permissions/permissions.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,8 +30,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   final SharingLocationRepository _sharingLocationRepository;
   final HiddenFromMapRepository _hiddenFromMapRepository;
 
-  late StreamSubscription _myPositionSubscription;
-  late StreamSubscription _contactsLocationsSubscription;
+  StreamSubscription? _myPositionSubscription;
+  StreamSubscription? _contactsLocationsSubscription;
 
   MapBloc(this._myLocationRepository, this._sharingLocationRepository,
       this._hiddenFromMapRepository)
@@ -42,6 +43,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<StopObservingMyPosition>(
           (event, emit) => _stopObservingMyPosition(),
     );
+    on<ShowPermissionsRationale>(_showPermissionsRationale);
+    on<RequestAllPermissions>(_requestAllPermissions);
     on<UpdateMyPosition>(_updateMyPosition);
     on<UpdateContactsLocation>(_updateContactsPositions);
     on<OpenMeWeClicked>(_openMeWeClicked);
@@ -62,22 +65,22 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _observeMyPosition() async {
-    _myPositionSubscription =
-        _myLocationRepository.observePrecisePosition().listen((position) {
+    if (!await areAllPermissionsGranted()) {
+      add(ShowPermissionsRationale());
+    } else {
+      _myPositionSubscription = _myLocationRepository.observePrecisePosition().listen((position) {
           final up = UserPosition(
               user: StorageRepository.user!,
               position: position,
               timestamp: position.timestamp);
           add(UpdateMyPosition(up));
-        });
+        });}
   }
 
   void _stopObservingMyPosition() async {
-    _myPositionSubscription.cancel();
-    final sessions = await _sharingLocationRepository
-        .getSharingSessionsAsOwner(StorageRepository.user!.userId);
-    final hasPreciseSharing =
-        sessions?.any((session) => session.isPrecise) ?? false;
+    _myPositionSubscription?.cancel();
+    final sessions = await _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId);
+    final hasPreciseSharing = sessions?.any((session) => session.isPrecise) ?? false;
     if (!hasPreciseSharing) {
       await _myLocationRepository.cancelObservingPrecisePosition();
     }
@@ -85,8 +88,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _observeContactsPosition() {
     _contactsLocationsSubscription = CombineLatestStream.combine2(
-        _sharingLocationRepository
-            .observeContactsSharingData(StorageRepository.user!.userId),
+        _sharingLocationRepository.observeContactsSharingData(StorageRepository.user!.userId),
         _hiddenFromMapRepository.observeHiddenUsers(),
             (contactsSharingData, hiddenUsers) =>
         (contactsSharingData, hiddenUsers)).listen((data) {
@@ -107,6 +109,19 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
       add(UpdateContactsLocation(contactsLocations));
     });
+  }
+
+  void _showPermissionsRationale(ShowPermissionsRationale event, Emitter<MapState> emit) async {
+    emit(state.copyWith(showPermissionsRationale: true));
+  }
+
+  void _requestAllPermissions(RequestAllPermissions event, Emitter<MapState> emit) async {
+    if (!await areAllPermissionsGranted()) {
+      if (await requestAllPermissions()) {
+        _observeMyPosition();
+      }
+    }
+    emit(state.copyWith(showPermissionsRationale: false));
   }
 
   void _updateMyPosition(UpdateMyPosition event, Emitter<MapState> emit) async {
@@ -142,8 +157,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
-  void _closeSelectedUser(
-      CloseSelectedUser event, Emitter<MapState> emit) async {
+  void _closeSelectedUser(CloseSelectedUser event, Emitter<MapState> emit) async {
     emit(state.copyWith(selectedUser: null));
     if (state.trackingState == TrackingState.selectedUser) {
       emit(state.copyWith(trackingState: TrackingState.notTracking));
@@ -186,8 +200,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
-  void _previousUserClicked(
-      PreviousUserClicked event, Emitter<MapState> emit) async {
+  void _previousUserClicked(PreviousUserClicked event, Emitter<MapState> emit) async {
     _changeUser(emit, -1);
   }
 
@@ -207,7 +220,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   @override
   Future<void> close() async {
-    _contactsLocationsSubscription.cancel();
+    _contactsLocationsSubscription?.cancel();
     _stopObservingMyPosition();
     return super.close();
   }

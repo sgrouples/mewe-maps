@@ -17,6 +17,16 @@ class StopObservingMyPosition extends MapEvent {
   List<Object?> get props => ['OnPause'];
 }
 
+class ShowPermissionsRationale extends MapEvent {
+  @override
+  List<Object?> get props => ['ShowPermissionsRationale'];
+}
+
+class RequestAllPermissions extends MapEvent {
+  @override
+  List<Object?> get props => ['RequestAllPermissions'];
+}
+
 class UpdateMyPosition extends MapEvent {
   final UserPosition? position;
 
