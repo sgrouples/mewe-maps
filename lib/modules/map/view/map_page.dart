@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:mewe_maps/models/user.dart';
+import 'package:mewe_maps/modules/app/app_lifecycle_tracker.dart';
 import 'package:mewe_maps/modules/contacts/view/contacts_page.dart';
 import 'package:mewe_maps/modules/map/bloc/map_bloc.dart';
 import 'package:mewe_maps/modules/map/view/components/loading_widget.dart';
@@ -28,8 +29,6 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
-  AppLifecycleListener? _appLifecycleListener;
-
   static const SHOULD_SHOW_CONTACTS_ON_START_KEY = "shouldShowContactsOnStart";
 
   bool shouldShowContacts =
@@ -47,6 +46,7 @@ class MapPageState extends State<MapPage> {
         create: (context) => _buildMapControllerManager(context),
         child: MultiBlocListener(
           listeners: [
+            _buildAppVisibilityListener(),
             _buildTrackingListener(),
             _buildMyPositionListenerListener(),
             _buildContactsPositionsListener(),
@@ -54,7 +54,9 @@ class MapPageState extends State<MapPage> {
             _buildShowPermissionListener()
           ],
           child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
-            if (state.mapInitialized && shouldShowContacts) {
+            if (state.mapInitialized &&
+                !state.showPermissionsRationale &&
+                shouldShowContacts) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showContactsModal(context).then((selectedUser) {
                   if (context.mounted && selectedUser != null) {
@@ -67,15 +69,6 @@ class MapPageState extends State<MapPage> {
                     SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
               });
             }
-
-            _appLifecycleListener ??= AppLifecycleListener(
-              onResume: () => context.read<MapBloc>().add(ObserveMyPosition()),
-              onPause: () =>
-                  context.read<MapBloc>().add(StopObservingMyPosition()),
-              onDetach: () =>
-                  context.read<MapBloc>().add(StopObservingMyPosition()),
-            );
-
             return _buildPage(context, state);
           }),
         ),
@@ -101,6 +94,22 @@ class MapPageState extends State<MapPage> {
           } else {
             context.read<MapControllerManager>().setTrackingUser(null);
           }
+        },
+      );
+
+  BlocListener<MapBloc, MapState> _buildAppVisibilityListener() =>
+      BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) =>
+            previous.mapInitialized != current.mapInitialized &&
+            current.mapInitialized,
+        listener: (context, state) {
+          AppLifecycleTracker.addVisibilityCallback((isAppVisible) {
+            if (isAppVisible) {
+              context.read<MapBloc>().add(ObserveMyPosition());
+            } else {
+              context.read<MapBloc>().add(StopObservingMyPosition());
+            }
+          });
         },
       );
 
@@ -154,12 +163,6 @@ class MapPageState extends State<MapPage> {
           context.read<MapBloc>().add(UserClicked(userPosition)),
       onMapSingleTap: () => context.read<MapBloc>().add(CloseSelectedUser()),
     );
-  }
-
-  @override
-  void dispose() {
-    _appLifecycleListener?.dispose();
-    super.dispose();
   }
 
   Widget _buildPage(BuildContext context, MapState state) {
