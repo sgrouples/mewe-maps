@@ -11,11 +11,15 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dartx/dartx.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/models/contact_sharing_data.dart';
+import 'package:mewe_maps/models/firestore/share_data.dart';
 import 'package:mewe_maps/models/user.dart';
-import 'package:mewe_maps/models/user_sharing_session.dart';
+import 'package:mewe_maps/models/firestore/sharing_session.dart';
 import 'package:mewe_maps/utils/logger.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 abstract class SharingLocationRepository {
@@ -26,170 +30,192 @@ abstract class SharingLocationRepository {
       User sharingUser, User recipientUser, int shareMinutes, bool isPrecise);
 
   // Stop sharing my position with the given session id.
-  Future<void> stopSharingSession(int sessionId);
+  Future<void> stopSharingSession(String sessionId);
 
   // Observe the sharing sessions where user is the owner (provides location to others).
-  Stream<List<UserSharingSession>> observeSharingSessionsAsOwner(String userId);
+  Stream<List<SharingSession>> observeSharingSessionsAsOwner(String userId);
 
   // Get the sharing sessions where user is the owner (provides location to others).
-  Future<List<UserSharingSession>?> getSharingSessionsAsOwner(String userId);
+  Future<List<SharingSession>?> getSharingSessionsAsOwner(String userId);
 
   // Upload my position to the server.
-  Future<void> uploadPosition(
-      Position position, List<UserSharingSession> sessions);
+  Future<void> uploadPosition(Position position, List<SharingSession> sessions);
 
   // Observe the positions of contacts' who share location with user.
   Stream<List<ContactSharingData>> observeContactsSharingData(String userId);
 }
 
-const _TAG = 'SupabaseSharingLocationRepository';
+const _TAG = 'FirestoreSharingLocationRepository';
 const TIME_INTERVAL_FOREVER = -1;
+const SHARING_SESSION_COLLECTION = 'sharing_sessions';
+const SHARED_DATA_COLLECTION = 'shared_data';
 final MAX_SHARE_UNTIL = DateTime(9999, 12, 31);
 
-class SupabaseSharingLocationRepository implements SharingLocationRepository {
-  final _supabase = Supabase.instance.client;
+class FirestoreSharingLocationRepository implements SharingLocationRepository {
+  final _firestore = FirebaseFirestore.instance;
+
+  @override
+  Future<List<SharingSession>?> getSharingSessionsAsOwner(String userId) {
+    return _firestore
+        .collection(SHARING_SESSION_COLLECTION)
+        .where('owner_id', isEqualTo: userId)
+        .where("share_until", isGreaterThan: Timestamp.now())
+        .get()
+        .then((value) {
+      return value.docs
+          .map((e) => SharingSession.fromJson(e.id, e.data()))
+          .toList();
+    });
+  }
 
   @override
   Stream<List<ContactSharingData>> observeContactsSharingData(String userId) {
-    final controller = StreamController<List<ContactSharingData>>();
+    return CombineLatestStream.combine2(
+        _firestore
+            .collection(SHARING_SESSION_COLLECTION)
+            .where('recipient_id', isEqualTo: userId)
+            .where("share_until", isGreaterThan: Timestamp.now())
+            .snapshots()
+            .map((sessions) => sessions.docs
+                .map((e) => SharingSession.fromJson(e.id, e.data()))
+                .toList()),
+        _firestore
+            .collection(SHARED_DATA_COLLECTION)
+            .where('recipient_id', isEqualTo: userId)
+            .snapshots()
+            .map((sharedData) => sharedData.docs
+                .map((e) => ShareData.fromJson(e.id, e.data()))
+                .toList()), (sessions, sharedData) {
+      final (cleanedSharedData, cleanedSessions) = _cleanUpOldData(sharedData, sessions);
 
-    Future<void> fetchData() async {
-      while (!controller.isClosed) {
-        // Keep fetching while the stream is open
-        final data = await _getContactsSharingData(userId);
-        if (data != null) {
-          controller.add(data);
-        }
-        await Future.delayed(const Duration(seconds: 5));
-      }
-    }
-
-    fetchData(); // Start the background loop
-
-    controller.onCancel = () {
-      controller.close(); // Close the stream when no more listeners exist
-    };
-
-    return controller.stream;
-  }
-
-  Future<List<ContactSharingData>?> _getContactsSharingData(
-      String userId) async {
-    try {
-      final response = await _supabase
-          .from("sharing_sessions")
-          .select(
-              'id, owner_id, owner_user_data, share_until, shared_data(location_data, updated_at)')
-          .eq('recipient_id', userId)
-          .gte('share_until', DateTime.now().toIso8601String());
-
-      return response
-          .map((element) => ContactSharingData.fromJson(element))
+      return cleanedSessions
+          .map((session) {
+            final data = cleanedSharedData
+                .firstOrNullWhere((element) => element.sessionId == session.id);
+            if (data == null) return null;
+            return ContactSharingData(
+              id: session.id,
+              contactId: session.ownerId,
+              contact: User.fromJson(jsonDecode(session.ownerDataRaw)),
+              shareUntil: session.shareUntil,
+              position: Position.fromMap(jsonDecode(data.positionDataRaw)),
+              updatedAt: data.updatedAt,
+            );
+          })
+          .nonNulls
           .toList();
-    } catch (e) {
-      Logger.log(_TAG, 'Error while fetching contacts sharing data. $e');
-      return null;
-    }
+    });
   }
 
   @override
-  Stream<List<UserSharingSession>> observeSharingSessionsAsOwner(
-      String userId) {
-    final controller = StreamController<List<UserSharingSession>>.broadcast();
-
-    Future<void> fetchData() async {
-      while (!controller.isClosed) {
-        // Keep fetching while the stream is open
-        final data = await getSharingSessionsAsOwner(userId);
-        if (data != null) {
-          controller.add(data);
-        }
-        await Future.delayed(
-            const Duration(seconds: 5)); // Wait before fetching again
-      }
-    }
-
-    fetchData(); // Start the background loop
-
-    controller.onCancel = () {
-      controller.close(); // Close the stream when no more listeners exist
-    };
-
-    return controller.stream;
-  }
-
-  @override
-  Future<List<UserSharingSession>?> getSharingSessionsAsOwner(
-      String userId) async {
-    try {
-      final response = await _supabase
-          .from("sharing_sessions")
-          .select(
-              'id, recipient_id, recipient_user_data, share_until, is_precise')
-          .eq('owner_id', userId)
-          .gte('share_until', DateTime.now().toIso8601String());
-
-      return response
-          .map((element) => UserSharingSession.fromJson(element))
+  Stream<List<SharingSession>> observeSharingSessionsAsOwner(String userId) {
+    return _firestore
+        .collection(SHARING_SESSION_COLLECTION)
+        .where('owner_id', isEqualTo: userId)
+        .where("share_until", isGreaterThan: Timestamp.now())
+        .snapshots()
+        .map((snapshot) {
+      final sessions = snapshot.docs
+          .map((e) => SharingSession.fromJson(e.id, e.data()))
           .toList();
-    } catch (e) {
-      Logger.log(_TAG, 'Error while fetching user sharing session. $e');
-      return null;
-    }
+      return _cleanUpOldSessions(sessions);
+    });
   }
 
   @override
   Future<void> startSharingSession(User sharingUser, User recipientUser,
       int shareMinutes, bool isPrecise) async {
-    Logger.log(_TAG,
-        'user: $sharingUser, recipient: $recipientUser, shareMinutes: $shareMinutes, isPrecise: $isPrecise');
-    await _supabase
-        .from('sharing_sessions')
-        .delete()
-        .eq('owner_id', sharingUser.userId)
-        .eq('recipient_id', recipientUser.userId);
+    await _deleteOldSessionForUsers(sharingUser, recipientUser);
 
-    final now = DateTime.now();
-    final shareUntil = shareMinutes == TIME_INTERVAL_FOREVER
-        ? MAX_SHARE_UNTIL
-        : now.add(Duration(minutes: shareMinutes)); // Add interval
-
-    final data = {
+    return await _firestore.collection(SHARING_SESSION_COLLECTION).add({
       'owner_id': sharingUser.userId,
       'recipient_id': recipientUser.userId,
       'recipient_user_data': jsonEncode(recipientUser.toJson()),
       'owner_user_data': jsonEncode(sharingUser.toJson()),
-      'share_until': shareUntil.toIso8601String(),
-      'created_at': now.toIso8601String(),
+      'share_until': shareMinutes == TIME_INTERVAL_FOREVER
+          ? MAX_SHARE_UNTIL
+          : DateTime.now().add(Duration(minutes: shareMinutes)),
       'is_precise': isPrecise,
-    };
+    }).then((value) {
+      Logger.log(_TAG, 'Sharing session started with id: ${value.id}');
+    });
+  }
 
-    return _supabase.from('sharing_sessions').upsert(data);
+  Future<void> _deleteOldSessionForUsers(User sharingUser, User recipientUser) {
+    return _firestore
+        .collection(SHARING_SESSION_COLLECTION)
+        .where('owner_id', isEqualTo: sharingUser.userId)
+        .where('recipient_id', isEqualTo: recipientUser.userId)
+        .get()
+        .then((value) {
+      value.docs.forEach((element) async {
+        await element.reference.delete();
+        await _firestore
+            .collection(SHARED_DATA_COLLECTION)
+            .doc(element.id)
+            .delete();
+      });
+    });
   }
 
   @override
-  Future<void> stopSharingSession(int sessionId) {
-    Logger.log(_TAG, 'stopSharingSession: $sessionId');
-    return _supabase.from('sharing_sessions').delete().eq('id', sessionId);
+  Future<void> stopSharingSession(String sessionId) {
+    return _firestore
+        .collection(SHARING_SESSION_COLLECTION)
+        .doc(sessionId)
+        .delete();
   }
 
   @override
   Future<void> uploadPosition(
-      Position position, List<UserSharingSession> sessions) {
-    try {
-      List<Future> futures = [];
-      for (var session in sessions) {
-        final data = {
-          'id': session.id,
-          'location_data': jsonEncode(position.toJson()),
-          'updated_at': DateTime.now().toIso8601String(),
-        };
-        futures.add(_supabase.from('shared_data').upsert(data));
-      }
-      return Future.wait(futures);
-    } catch (e) {
-      Logger.log(_TAG, 'Error while uploading position. $e');
-      return Future.error(e);
+      Position position, List<SharingSession> sessions) {
+    Logger.log(_TAG, 'Uploading position to ${sessions.length} sessions');
+    List<Future> futures = [];
+    for (var session in sessions) {
+      final data = ShareData(
+        sessionId: session.id,
+        recipientId: session.recipientId,
+        positionDataRaw: jsonEncode(position.toJson()),
+        updatedAt: DateTime.now(),
+      );
+      futures.add(_firestore
+          .collection(SHARED_DATA_COLLECTION)
+          .doc(data.sessionId)
+          .set(data.toJson()));
     }
+    return Future.value();
+  }
+
+  List<SharingSession> _cleanUpOldSessions(List<SharingSession> sessions) {
+    final now = DateTime.now();
+    List<SharingSession> newSessions = [];
+    for (var session in sessions) {
+      if (session.shareUntil.isBefore(now)) {
+        _firestore
+            .collection(SHARING_SESSION_COLLECTION)
+            .doc(session.id)
+            .delete();
+      } else {
+        newSessions.add(session);
+      }
+    }
+    return newSessions;
+  }
+
+  (List<ShareData>, List<SharingSession>) _cleanUpOldData(
+      List<ShareData> sharedData, List<SharingSession> sessions) {
+    sessions = _cleanUpOldSessions(sessions);
+    List<ShareData> newSharedData = [];
+    for (var data in sharedData) {
+      if (sessions.none((element) => element.id == data.sessionId)) {
+        _firestore
+            .collection(SHARED_DATA_COLLECTION)
+            .doc(data.sessionId)
+            .delete();
+      } else {
+        newSharedData.add(data);
+      }
+    }
+    return (newSharedData, sessions);
   }
 }

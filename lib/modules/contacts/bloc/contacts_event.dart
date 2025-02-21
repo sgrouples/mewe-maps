@@ -28,7 +28,7 @@ class ShareMyPositionStarted extends ContactsEvent {
 }
 
 class ShareMyPositionStopped extends ContactsEvent {
-  final int sessionId;
+  final String sessionId;
 
   ShareMyPositionStopped(this.sessionId);
 

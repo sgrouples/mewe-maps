@@ -9,7 +9,6 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -17,8 +16,8 @@ import 'package:dartx/dartx.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:mewe_maps/main.dart';
+import 'package:mewe_maps/models/firestore/sharing_session.dart';
 import 'package:mewe_maps/models/user.dart';
-import 'package:mewe_maps/models/user_sharing_session.dart';
 import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
@@ -84,7 +83,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     });
   }
 
-  void _handleMySharingSessions(List<UserSharingSession> sharingSessions) {
+  void _handleMySharingSessions(List<SharingSession> sharingSessions) {
     List<MyPositionSharing> myPositions = sharingSessions.mapNotNull((session) {
       final contact = _contacts
           .firstOrNullWhere((contact) => contact.userId == session.recipientId);
@@ -127,7 +126,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
             (contactsSharingData, hiddenUsers)).listen((data) {
       final contactLocationData = data.$1.map((sharingData) {
         return MapEntry(
-          User.fromJson(jsonDecode(sharingData.userDataRaw)),
+          sharingData.contact,
           !data.$2.contains(sharingData.contactId),
         );
       });

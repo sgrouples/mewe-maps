@@ -8,30 +8,18 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-import 'package:equatable/equatable.dart';
-import 'package:geolocator/geolocator.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import 'user.dart';
-
-class ContactSharingData extends Equatable {
-  final String id;
-  final String contactId;
-  final User contact;
-  final DateTime shareUntil;
-  final Position position;
-  final DateTime updatedAt;
+class TimestampConverter implements JsonConverter<DateTime, Timestamp> {
+  const TimestampConverter();
 
   @override
-  List<Object?> get props =>
-      [id, contact, shareUntil, contactId, position, updatedAt];
+  DateTime fromJson(Timestamp timestamp) {
+    return timestamp.toDate();
+  }
 
-  const ContactSharingData(
-      {required this.id,
-      required this.contact,
-      required this.shareUntil,
-      required this.contactId,
-      required this.position,
-      required this.updatedAt});
-
+  @override
+  Timestamp toJson(DateTime date) => Timestamp.fromDate(date);
 }

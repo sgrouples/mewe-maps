@@ -8,41 +8,42 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mewe_maps/services/firebase/firestore_timestamp_adapter.dart';
 
-part 'user_sharing_session.g.dart';
+part 'share_data.g.dart';
 
 @JsonSerializable()
-class UserSharingSession extends Equatable {
-  @JsonKey(name: "id")
-  final int id;
+class ShareData extends Equatable {
+
+  @JsonKey(includeToJson: false)
+  final String sessionId;
 
   @JsonKey(name: "recipient_id")
   final String recipientId;
 
-  @JsonKey(name: "recipient_user_data")
-  final String recipientDataRaw;
+  @JsonKey(name: "location_data")
+  final String positionDataRaw;
 
-  @JsonKey(name: "share_until")
-  final DateTime shareUntil;
-
-  @JsonKey(name: "is_precise")
-  final bool isPrecise;
+  @JsonKey(name: "updated_at")
+  @TimestampConverter()
+  final DateTime updatedAt;
 
   @override
-  List<Object?> get props =>
-      [id, recipientId, recipientDataRaw, shareUntil, isPrecise];
+  List<Object?> get props => [sessionId, recipientId, positionDataRaw, updatedAt];
 
-  const UserSharingSession(
-      {required this.id,
+  const ShareData(
+      {required this.sessionId,
       required this.recipientId,
-      required this.recipientDataRaw,
-      required this.shareUntil,
-      required this.isPrecise});
+      required this.positionDataRaw,
+      required this.updatedAt});
 
-  factory UserSharingSession.fromJson(Map<String, dynamic> json) =>
-      _$UserSharingSessionFromJson(json);
+  factory ShareData.fromJson(String id, Map<String, dynamic> json) =>
+      _$ShareDataFromJson(json..addAll({"sessionId": id}));
 
-  Map<String, dynamic> toJson() => _$UserSharingSessionToJson(this);
+  Map<String, dynamic> toJson() => _$ShareDataToJson(this);
+
 }
