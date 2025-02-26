@@ -21,17 +21,13 @@ Future<bool> shareMyLocationWithSessions(bool isPrecise) async {
 
   final userId = StorageRepository.user?.userId;
   if (userId != null) {
-    final lastPosition =
-        await MyLocationRepositoryImpl().getLastKnownPosition();
+    final lastPosition = await MyLocationRepositoryImpl().getLastKnownPosition();
 
     if (lastPosition != null) {
       final sharingRepository = SupabaseSharingLocationRepository();
-      final sessions =
-          await sharingRepository.getSharingSessionsAsOwner(userId);
+      final sessions = await sharingRepository.getSharingSessionsAsOwner(userId);
       if (sessions != null && sessions.isNotEmpty) {
-        final filteredSessions = sessions
-            .filter((session) => session.isPrecise == isPrecise)
-            .toList();
+        final filteredSessions = sessions.filter((session) => session.isPrecise == isPrecise).toList();
         await sharingRepository.uploadPosition(lastPosition, filteredSessions);
         Logger.log(_TAG, "success");
         return true;

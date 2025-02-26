@@ -31,8 +31,7 @@ class MapPage extends StatefulWidget {
 class MapPageState extends State<MapPage> {
   static const SHOULD_SHOW_CONTACTS_ON_START_KEY = "shouldShowContactsOnStart";
 
-  bool shouldShowContacts =
-      StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
+  bool shouldShowContacts = StorageRepository.getFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, true);
 
   @override
   Widget build(BuildContext context) {
@@ -54,19 +53,14 @@ class MapPageState extends State<MapPage> {
             _buildShowPermissionListener()
           ],
           child: BlocBuilder<MapBloc, MapState>(builder: (context, state) {
-            if (state.mapInitialized &&
-                !state.showPermissionsRationale &&
-                shouldShowContacts) {
+            if (state.mapInitialized && !state.showPermissionsRationale && shouldShowContacts) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showContactsModal(context).then((selectedUser) {
                   if (context.mounted && selectedUser != null) {
-                    context
-                        .read<MapBloc>()
-                        .add(UserSelectedFromContacts(selectedUser));
+                    context.read<MapBloc>().add(UserSelectedFromContacts(selectedUser));
                   }
                 });
-                StorageRepository.setFlag(
-                    SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
+                StorageRepository.setFlag(SHOULD_SHOW_CONTACTS_ON_START_KEY, false);
               });
             }
             return _buildPage(context, state);
@@ -76,32 +70,22 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  BlocListener<MapBloc, MapState> _buildTrackingListener() =>
-      BlocListener<MapBloc, MapState>(
+  BlocListener<MapBloc, MapState> _buildTrackingListener() => BlocListener<MapBloc, MapState>(
         listenWhen: (previous, current) =>
-            previous.trackingState != current.trackingState ||
-            previous.myPosition != current.myPosition ||
-            previous.selectedUser != current.selectedUser,
+            previous.trackingState != current.trackingState || previous.myPosition != current.myPosition || previous.selectedUser != current.selectedUser,
         listener: (context, state) {
           if (state.trackingState == TrackingState.myPosition) {
-            context
-                .read<MapControllerManager>()
-                .setTrackingUser(state.myPosition);
+            context.read<MapControllerManager>().setTrackingUser(state.myPosition);
           } else if (state.trackingState == TrackingState.selectedUser) {
-            context
-                .read<MapControllerManager>()
-                .setTrackingUser(state.selectedUser);
+            context.read<MapControllerManager>().setTrackingUser(state.selectedUser);
           } else {
             context.read<MapControllerManager>().setTrackingUser(null);
           }
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildAppVisibilityListener() =>
-      BlocListener<MapBloc, MapState>(
-        listenWhen: (previous, current) =>
-            previous.mapInitialized != current.mapInitialized &&
-            current.mapInitialized,
+  BlocListener<MapBloc, MapState> _buildAppVisibilityListener() => BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) => previous.mapInitialized != current.mapInitialized && current.mapInitialized,
         listener: (context, state) {
           AppLifecycleTracker.addVisibilityCallback((isAppVisible) {
             if (isAppVisible) {
@@ -113,54 +97,39 @@ class MapPageState extends State<MapPage> {
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildMyPositionListenerListener() =>
-      BlocListener<MapBloc, MapState>(
-        listenWhen: (previous, current) =>
-            previous.myPosition != current.myPosition,
+  BlocListener<MapBloc, MapState> _buildMyPositionListenerListener() => BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) => previous.myPosition != current.myPosition,
         listener: (context, state) {
           context.read<MapControllerManager>().setMyPosition(state.myPosition);
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildContactsPositionsListener() =>
-      BlocListener<MapBloc, MapState>(
-        listenWhen: (previous, current) =>
-            previous.contactsPositions != current.contactsPositions,
+  BlocListener<MapBloc, MapState> _buildContactsPositionsListener() => BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) => previous.contactsPositions != current.contactsPositions,
         listener: (context, state) {
-          context
-              .read<MapControllerManager>()
-              .setContactsPositions(state.contactsPositions);
+          context.read<MapControllerManager>().setContactsPositions(state.contactsPositions);
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildSelectedUserListener() =>
-      BlocListener<MapBloc, MapState>(
-        listenWhen: (previous, current) =>
-            previous.selectedUser?.user != current.selectedUser?.user,
+  BlocListener<MapBloc, MapState> _buildSelectedUserListener() => BlocListener<MapBloc, MapState>(
+        listenWhen: (previous, current) => previous.selectedUser?.user != current.selectedUser?.user,
         listener: (context, state) {
           if (state.selectedUser != null) {
-            context
-                .read<MapControllerManager>()
-                .moveToUser(state.selectedUser!);
+            context.read<MapControllerManager>().moveToUser(state.selectedUser!);
           }
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildShowPermissionListener() =>
-      BlocListener<MapBloc, MapState>(
-          listenWhen: (previous, current) =>
-              previous.showPermissionsRationale !=
-                  current.showPermissionsRationale &&
-              current.showPermissionsRationale,
-          listener: (context, state) {
-            _showPermissionsRationale(context);
-          });
+  BlocListener<MapBloc, MapState> _buildShowPermissionListener() => BlocListener<MapBloc, MapState>(
+      listenWhen: (previous, current) => previous.showPermissionsRationale != current.showPermissionsRationale && current.showPermissionsRationale,
+      listener: (context, state) {
+        _showPermissionsRationale(context);
+      });
 
   MapControllerManager _buildMapControllerManager(BuildContext context) {
     return MapControllerManager(
       context.read(),
-      onUserTap: (userPosition) =>
-          context.read<MapBloc>().add(UserClicked(userPosition)),
+      onUserTap: (userPosition) => context.read<MapBloc>().add(UserClicked(userPosition)),
       onMapSingleTap: () => context.read<MapBloc>().add(CloseSelectedUser()),
     );
   }
@@ -181,11 +150,7 @@ class MapPageState extends State<MapPage> {
 
     return Scaffold(
       body: Stack(
-        children: [
-          mapWidget,
-          if (!state.mapInitialized) const LoadingWidget(),
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())
-        ],
+        children: [mapWidget, if (!state.mapInitialized) const LoadingWidget(), Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())],
       ),
     );
   }
@@ -207,12 +172,8 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildBottom() =>
-      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        _trackingFloatingActionButton(),
-        _contactsFloatingActionButton(),
-        const SelectedUserBottomView()
-      ]);
+  Widget _buildBottom() => Column(
+      crossAxisAlignment: CrossAxisAlignment.end, children: [_trackingFloatingActionButton(), _contactsFloatingActionButton(), const SelectedUserBottomView()]);
 
   void _showPermissionsRationale(BuildContext context) {
     showDialog(
@@ -272,8 +233,7 @@ class MapPageState extends State<MapPage> {
                 context.read<MapBloc>().add(TrackMyPositionClicked());
               },
               backgroundColor: Colors.white,
-              child: LocationTrackingIcon(
-                  state.trackingState == TrackingState.myPosition),
+              child: LocationTrackingIcon(state.trackingState == TrackingState.myPosition),
             ),
           );
         },

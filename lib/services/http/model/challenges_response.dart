@@ -25,8 +25,7 @@ class ChallengesResponse extends Equatable {
   @override
   List<Object?> get props => [challenges];
 
-  factory ChallengesResponse.fromJson(Map<String, dynamic> json) =>
-      _$ChallengesResponseFromJson(json);
+  factory ChallengesResponse.fromJson(Map<String, dynamic> json) => _$ChallengesResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$ChallengesResponseToJson(this);
 }

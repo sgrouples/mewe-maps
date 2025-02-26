@@ -18,12 +18,7 @@ class UserPosition {
   final DateTime timestamp;
   final DateTime? shareUntil;
 
-  UserPosition(
-      {required this.user,
-      required this.position,
-      required this.timestamp,
-      this.shareUntil});
+  UserPosition({required this.user, required this.position, required this.timestamp, this.shareUntil});
 
-  GeoPoint get geoPoint =>
-      GeoPoint(latitude: position.latitude, longitude: position.longitude);
+  GeoPoint get geoPoint => GeoPoint(latitude: position.latitude, longitude: position.longitude);
 }
