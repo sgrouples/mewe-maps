@@ -13,7 +13,7 @@ import 'package:mewe_maps/services/http/mewe_service.dart';
 import 'package:synchronized/synchronized.dart';
 
 abstract class ContactsRepository {
-  Future<List<User>> getContacts();
+  Future<List<User>> getContacts({bool forceRefresh = false});
 }
 
 class MeWeContactsRepository implements ContactsRepository {
