@@ -8,6 +8,7 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -130,11 +131,17 @@ class ContactsPage extends StatelessWidget {
       buildWhen: (previous, current) =>
           previous.shareMyPositionData != current.shareMyPositionData ||
           previous.contacts != current.contacts ||
-          previous.error != current.error,
+          previous.error != current.error ||
+          previous.contactsSearchQuery != current.contactsSearchQuery,
       builder: (context, state) {
         if (state.contacts == null) {
           return const Center(child: CircularProgressIndicator());
         }
+
+        final filteredContacts = state.contacts!.where((contact) {
+          final name = contact.name.toLowerCase();
+          return name.contains(state.contactsSearchQuery.toLowerCase());
+        }).toList();
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -167,46 +174,78 @@ class ContactsPage extends StatelessWidget {
                         ),
                       ],
                     )
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: (state.shareMyPositionData?.length ?? 0) +
-                          (state.contacts?.length ?? 0),
-                      itemBuilder: (context, index) {
-                        if (index < (state.shareMyPositionData?.length ?? 0)) {
-                          final sharingData = state.shareMyPositionData![index];
-                          return ContactListItem(
-                            user: sharingData.contact,
-                            trailing: ContactSwitch(
-                              value: true,
-                              switchText: sharingData.sharedUntil.year == 9999
-                                  ? "Until I stop"
-                                  : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
-                              onChanged: (newValue) {
-                                context.read<ContactsBloc>().add(
-                                    ShareMyPositionStopped(
-                                        sharingData.sharingSessionId));
-                              },
+                  : Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.search),
+                              hintText: 'Search...',
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(16)),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 0, horizontal: 8),
                             ),
-                          );
-                        } else {
-                          final contact = state.contacts![
-                              index - (state.shareMyPositionData?.length ?? 0)];
-                          return ContactListItem(
-                            user: contact,
-                            trailing: IconButton(
-                              onPressed: () async {
-                                final minutes =
-                                    await showIntervalModal(context, contact);
-                                if (context.mounted && minutes != null) {
-                                  context.read<ContactsBloc>().add(
-                                      ShareMyPositionStarted(contact, minutes));
-                                }
-                              },
-                              icon: const Icon(Icons.add),
-                            ),
-                          );
-                        }
-                      },
+                            onChanged: (query) {
+                              context
+                                  .read<ContactsBloc>()
+                                  .add(ContactsSearchQueryChanged(query));
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: filteredContacts.length,
+                            itemBuilder: (context, index) {
+                              final contact = filteredContacts[index];
+                              final sharingData =
+                                  state.shareMyPositionData?.firstOrNullWhere(
+                                (sharing) =>
+                                    sharing.contact.userId == contact.userId,
+                              );
+                              if (sharingData != null) {
+                                return ContactListItem(
+                                  user: sharingData.contact,
+                                  trailing: ContactSwitch(
+                                    value: true,
+                                    switchText: sharingData.sharedUntil.year ==
+                                            9999
+                                        ? "Until I stop"
+                                        : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                                    onChanged: (newValue) {
+                                      context.read<ContactsBloc>().add(
+                                          ShareMyPositionStopped(
+                                              sharingData.sharingSessionId));
+                                    },
+                                  ),
+                                );
+                              } else {
+                                return ContactListItem(
+                                  user: contact,
+                                  trailing: IconButton(
+                                    onPressed: () async {
+                                      final minutes = await showIntervalModal(
+                                          context, contact);
+                                      if (context.mounted && minutes != null) {
+                                        context.read<ContactsBloc>().add(
+                                            ShareMyPositionStarted(
+                                                contact, minutes));
+                                      }
+                                    },
+                                    icon: const Icon(Icons.add),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
         );
       },
@@ -260,11 +299,21 @@ class ContactsPage extends StatelessWidget {
     return BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
           previous.contactLocationData != current.contactLocationData ||
-          previous.error != current.error,
+          previous.error != current.error ||
+          previous.contactLocationDataSearchQuery !=
+              current.contactLocationDataSearchQuery,
       builder: (context, state) {
         if (state.contactLocationData == null) {
           return const Center(child: CircularProgressIndicator());
         }
+
+        final allContacts = state.contactLocationData!.keys.toList();
+
+        final filteredContacts = allContacts.where((contact) {
+          final name = contact.name.toLowerCase();
+          return name
+              .contains(state.contactLocationDataSearchQuery.toLowerCase());
+        }).toList();
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -297,28 +346,53 @@ class ContactsPage extends StatelessWidget {
                         ),
                       ],
                     )
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: state.contactLocationData?.length ?? 0,
-                      itemBuilder: (context, index) {
-                        final contact =
-                            state.contactLocationData?.keys.elementAt(index);
-                        if (contact == null) return const SizedBox.shrink();
-                        return ContactListItem(
-                          user: contact,
-                          onTapped: () {
-                            Navigator.of(context).pop(contact);
-                          },
-                          trailing: ContactSwitch(
-                            value: state.contactLocationData![contact]!,
-                            switchText: "Display on Map",
-                            onChanged: (newValue) {
+                  : Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.search),
+                              hintText: 'Search...',
+                              border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16.0))),
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 0,
+                                horizontal: 8,
+                              ),
+                            ),
+                            onChanged: (query) {
                               context.read<ContactsBloc>().add(
-                                  DisplayOnTheMapChanged(contact, newValue));
+                                  ContactLocationDataSearchQueryChanged(query));
                             },
                           ),
-                        );
-                      },
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: filteredContacts.length,
+                            itemBuilder: (context, index) {
+                              final contact = filteredContacts[index];
+                              return ContactListItem(
+                                user: contact,
+                                onTapped: () {
+                                  Navigator.of(context).pop(contact);
+                                },
+                                trailing: ContactSwitch(
+                                  value: state.contactLocationData![contact]!,
+                                  switchText: "Display on Map",
+                                  onChanged: (newValue) {
+                                    context.read<ContactsBloc>().add(
+                                        DisplayOnTheMapChanged(
+                                            contact, newValue));
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
         );
       },

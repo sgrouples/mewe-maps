@@ -83,3 +83,21 @@ class ReloadContactLocationData extends ContactsEvent {
   @override
   List<Object?> get props => ['ReloadContactLocationData'];
 }
+
+class ContactsSearchQueryChanged extends ContactsEvent {
+  final String query;
+
+  ContactsSearchQueryChanged(this.query);
+
+  @override
+  List<Object?> get props => ['ContactsSearchQueryChanged'];
+}
+
+class ContactLocationDataSearchQueryChanged extends ContactsEvent {
+  final String query;
+
+  ContactLocationDataSearchQueryChanged(this.query);
+
+  @override
+  List<Object?> get props => ['ContactLocationDataSearchQueryChanged'];
+}
