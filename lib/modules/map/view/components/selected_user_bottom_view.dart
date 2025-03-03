@@ -40,12 +40,7 @@ class SelectedUserBottomView extends StatelessWidget {
               child: _buildContainer(context, state),
             ),
             _buildTrackingButton(context, state),
-            if (state.contactsPositions.length > 1)
-              Positioned(
-                  top: 120,
-                  left: 0,
-                  right: 0,
-                  child: _buildLeftRightButtons(context, state)),
+            if (state.contactsPositions.length > 1) Positioned(top: 120, left: 0, right: 0, child: _buildLeftRightButtons(context, state)),
             _buildAvatar(state, context),
           ],
         );
@@ -65,13 +60,8 @@ class SelectedUserBottomView extends StatelessWidget {
           _buildName(state.selectedUser!.user),
           const SizedBox(height: 16),
           _buildCoordinates(userPosition, context),
-          if (state.selectedUser!.shareUntil != null)
-            _buildLabel(
-                "Share until: ${DateFormat('HH:mm:ss').format(state.selectedUser!.shareUntil!)}",
-                context),
-          _buildLabel(
-              "Update time: ${DateFormat('HH:mm:ss').format(state.selectedUser!.timestamp)}",
-              context),
+          if (state.selectedUser!.shareUntil != null) _buildLabel("Share until: ${DateFormat('HH:mm:ss').format(state.selectedUser!.shareUntil!)}", context),
+          _buildLabel("Update time: ${DateFormat('HH:mm:ss').format(state.selectedUser!.timestamp)}", context),
           _buildActions(state, context),
           const SizedBox(height: 16),
         ],
@@ -104,10 +94,7 @@ class SelectedUserBottomView extends StatelessWidget {
     return Center(
       child: Text(
         text,
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: Colors.grey[600]),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
       ),
     );
   }
@@ -157,8 +144,7 @@ class SelectedUserBottomView extends StatelessWidget {
   }
 
   Widget _buildCoordinates(UserPosition userPosition, BuildContext context) {
-    final cordsText =
-        '${userPosition.geoPoint.latitude.toStringAsFixed(5)}, ${userPosition.geoPoint.longitude.toStringAsFixed(5)}';
+    final cordsText = '${userPosition.geoPoint.latitude.toStringAsFixed(5)}, ${userPosition.geoPoint.longitude.toStringAsFixed(5)}';
     return GestureDetector(
       onTap: () {
         Clipboard.setData(ClipboardData(text: cordsText));
@@ -166,8 +152,7 @@ class SelectedUserBottomView extends StatelessWidget {
       },
       child: Text(
         cordsText,
-        style: const TextStyle(
-            fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
       ),
     );
   }
@@ -207,10 +192,8 @@ class SelectedUserBottomView extends StatelessWidget {
       top: 40,
       left: 16,
       child: IconButton(
-        onPressed: () =>
-            context.read<MapBloc>().add(TrackSelectedUserClicked()),
-        icon: LocationTrackingIcon(
-            state.trackingState == TrackingState.selectedUser),
+        onPressed: () => context.read<MapBloc>().add(TrackSelectedUserClicked()),
+        icon: LocationTrackingIcon(state.trackingState == TrackingState.selectedUser),
       ),
     );
   }

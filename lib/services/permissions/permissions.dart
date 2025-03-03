@@ -12,9 +12,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<bool> areAllPermissionsGranted() async {
-  return await Permission.notification.isGranted &&
-      await Permission.location.isGranted &&
-      await Permission.locationAlways.isGranted;
+  return await Permission.notification.isGranted && await Permission.location.isGranted && await Permission.locationAlways.isGranted;
 }
 
 Future<bool> requestAllPermissions() async {

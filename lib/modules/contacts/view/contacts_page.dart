@@ -87,9 +87,7 @@ class ContactsPage extends StatelessWidget {
                                     actions: [
                                       TextButton(
                                         onPressed: () {
-                                          context
-                                              .read<ContactsBloc>()
-                                              .add(LogOutClicked(context));
+                                          context.read<ContactsBloc>().add(LogOutClicked(context));
                                         },
                                         child: const Text('Yes, log me out'),
                                       ),
@@ -183,18 +181,14 @@ class ContactsPage extends StatelessWidget {
                               prefixIcon: Icon(Icons.search),
                               hintText: 'Search...',
                               border: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(16)),
+                                borderRadius: BorderRadius.all(Radius.circular(16)),
                                 borderSide: BorderSide.none,
                               ),
                               filled: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 0, horizontal: 8),
+                              contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                             ),
                             onChanged: (query) {
-                              context
-                                  .read<ContactsBloc>()
-                                  .add(ContactsSearchQueryChanged(query));
+                              context.read<ContactsBloc>().add(ContactsSearchQueryChanged(query));
                             },
                           ),
                         ),
@@ -204,24 +198,18 @@ class ContactsPage extends StatelessWidget {
                             itemCount: filteredContacts.length,
                             itemBuilder: (context, index) {
                               final contact = filteredContacts[index];
-                              final sharingData =
-                                  state.shareMyPositionData?.firstOrNullWhere(
-                                (sharing) =>
-                                    sharing.contact.userId == contact.userId,
+                              final sharingData = state.shareMyPositionData?.firstOrNullWhere(
+                                (sharing) => sharing.contact.userId == contact.userId,
                               );
                               if (sharingData != null) {
                                 return ContactListItem(
                                   user: sharingData.contact,
                                   trailing: ContactSwitch(
                                     value: true,
-                                    switchText: sharingData.sharedUntil.year ==
-                                            9999
-                                        ? "Until I stop"
-                                        : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                                    switchText:
+                                        sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
                                     onChanged: (newValue) {
-                                      context.read<ContactsBloc>().add(
-                                          ShareMyPositionStopped(
-                                              sharingData.sharingSessionId));
+                                      context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
                                     },
                                   ),
                                 );
@@ -230,12 +218,9 @@ class ContactsPage extends StatelessWidget {
                                   user: contact,
                                   trailing: IconButton(
                                     onPressed: () async {
-                                      final minutes = await showIntervalModal(
-                                          context, contact);
+                                      final minutes = await showIntervalModal(context, contact);
                                       if (context.mounted && minutes != null) {
-                                        context.read<ContactsBloc>().add(
-                                            ShareMyPositionStarted(
-                                                contact, minutes));
+                                        context.read<ContactsBloc>().add(ShareMyPositionStarted(contact, minutes));
                                       }
                                     },
                                     icon: const Icon(Icons.add),
@@ -300,8 +285,7 @@ class ContactsPage extends StatelessWidget {
       buildWhen: (previous, current) =>
           previous.contactLocationData != current.contactLocationData ||
           previous.error != current.error ||
-          previous.contactLocationDataSearchQuery !=
-              current.contactLocationDataSearchQuery,
+          previous.contactLocationDataSearchQuery != current.contactLocationDataSearchQuery,
       builder: (context, state) {
         if (state.contactLocationData == null) {
           return const Center(child: CircularProgressIndicator());
@@ -311,8 +295,7 @@ class ContactsPage extends StatelessWidget {
 
         final filteredContacts = allContacts.where((contact) {
           final name = contact.name.toLowerCase();
-          return name
-              .contains(state.contactLocationDataSearchQuery.toLowerCase());
+          return name.contains(state.contactLocationDataSearchQuery.toLowerCase());
         }).toList();
 
         return RefreshIndicator(
@@ -354,17 +337,14 @@ class ContactsPage extends StatelessWidget {
                             decoration: const InputDecoration(
                               prefixIcon: Icon(Icons.search),
                               hintText: 'Search...',
-                              border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(16.0))),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
                               contentPadding: EdgeInsets.symmetric(
                                 vertical: 0,
                                 horizontal: 8,
                               ),
                             ),
                             onChanged: (query) {
-                              context.read<ContactsBloc>().add(
-                                  ContactLocationDataSearchQueryChanged(query));
+                              context.read<ContactsBloc>().add(ContactLocationDataSearchQueryChanged(query));
                             },
                           ),
                         ),
@@ -383,9 +363,7 @@ class ContactsPage extends StatelessWidget {
                                   value: state.contactLocationData![contact]!,
                                   switchText: "Display on Map",
                                   onChanged: (newValue) {
-                                    context.read<ContactsBloc>().add(
-                                        DisplayOnTheMapChanged(
-                                            contact, newValue));
+                                    context.read<ContactsBloc>().add(DisplayOnTheMapChanged(contact, newValue));
                                   },
                                 ),
                               );

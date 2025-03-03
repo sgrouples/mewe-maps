@@ -22,8 +22,7 @@ abstract class SharingLocationRepository {
   // Start sharing my position with the given user ids.
   // Time interval is in minutes.
   // sharingUser - data of the user who wants to share the location.
-  Future<void> startSharingSession(
-      User sharingUser, User recipientUser, int shareMinutes, bool isPrecise);
+  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes, bool isPrecise);
 
   // Stop sharing my position with the given session id.
   Future<void> stopSharingSession(int sessionId);
@@ -35,8 +34,7 @@ abstract class SharingLocationRepository {
   Future<List<UserSharingSession>?> getSharingSessionsAsOwner(String userId);
 
   // Upload my position to the server.
-  Future<void> uploadPosition(
-      Position position, List<UserSharingSession> sessions);
+  Future<void> uploadPosition(Position position, List<UserSharingSession> sessions);
 
   // Observe the positions of contacts' who share location with user.
   Stream<List<ContactSharingData>> observeContactsSharingData(String userId);
@@ -73,19 +71,15 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
     return controller.stream;
   }
 
-  Future<List<ContactSharingData>?> _getContactsSharingData(
-      String userId) async {
+  Future<List<ContactSharingData>?> _getContactsSharingData(String userId) async {
     try {
       final response = await _supabase
           .from("sharing_sessions")
-          .select(
-              'id, owner_id, owner_user_data, share_until, shared_data(location_data, updated_at)')
+          .select('id, owner_id, owner_user_data, share_until, shared_data(location_data, updated_at)')
           .eq('recipient_id', userId)
           .gte('share_until', DateTime.now().toIso8601String());
 
-      return response
-          .map((element) => ContactSharingData.fromJson(element))
-          .toList();
+      return response.map((element) => ContactSharingData.fromJson(element)).toList();
     } catch (e) {
       Logger.log(_TAG, 'Error while fetching contacts sharing data. $e');
       return null;
@@ -93,8 +87,7 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Stream<List<UserSharingSession>> observeSharingSessionsAsOwner(
-      String userId) {
+  Stream<List<UserSharingSession>> observeSharingSessionsAsOwner(String userId) {
     final controller = StreamController<List<UserSharingSession>>.broadcast();
 
     Future<void> fetchData() async {
@@ -104,8 +97,7 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
         if (data != null) {
           controller.add(data);
         }
-        await Future.delayed(
-            const Duration(seconds: 5)); // Wait before fetching again
+        await Future.delayed(const Duration(seconds: 5)); // Wait before fetching again
       }
     }
 
@@ -119,19 +111,15 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<List<UserSharingSession>?> getSharingSessionsAsOwner(
-      String userId) async {
+  Future<List<UserSharingSession>?> getSharingSessionsAsOwner(String userId) async {
     try {
       final response = await _supabase
           .from("sharing_sessions")
-          .select(
-              'id, recipient_id, recipient_user_data, share_until, is_precise')
+          .select('id, recipient_id, recipient_user_data, share_until, is_precise')
           .eq('owner_id', userId)
           .gte('share_until', DateTime.now().toIso8601String());
 
-      return response
-          .map((element) => UserSharingSession.fromJson(element))
-          .toList();
+      return response.map((element) => UserSharingSession.fromJson(element)).toList();
     } catch (e) {
       Logger.log(_TAG, 'Error while fetching user sharing session. $e');
       return null;
@@ -139,20 +127,12 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<void> startSharingSession(User sharingUser, User recipientUser,
-      int shareMinutes, bool isPrecise) async {
-    Logger.log(_TAG,
-        'user: $sharingUser, recipient: $recipientUser, shareMinutes: $shareMinutes, isPrecise: $isPrecise');
-    await _supabase
-        .from('sharing_sessions')
-        .delete()
-        .eq('owner_id', sharingUser.userId)
-        .eq('recipient_id', recipientUser.userId);
+  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes, bool isPrecise) async {
+    Logger.log(_TAG, 'user: $sharingUser, recipient: $recipientUser, shareMinutes: $shareMinutes, isPrecise: $isPrecise');
+    await _supabase.from('sharing_sessions').delete().eq('owner_id', sharingUser.userId).eq('recipient_id', recipientUser.userId);
 
     final now = DateTime.now();
-    final shareUntil = shareMinutes == TIME_INTERVAL_FOREVER
-        ? MAX_SHARE_UNTIL
-        : now.add(Duration(minutes: shareMinutes)); // Add interval
+    final shareUntil = shareMinutes == TIME_INTERVAL_FOREVER ? MAX_SHARE_UNTIL : now.add(Duration(minutes: shareMinutes)); // Add interval
 
     final data = {
       'owner_id': sharingUser.userId,
@@ -174,8 +154,7 @@ class SupabaseSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<void> uploadPosition(
-      Position position, List<UserSharingSession> sessions) {
+  Future<void> uploadPosition(Position position, List<UserSharingSession> sessions) {
     try {
       List<Future> futures = [];
       for (var session in sessions) {

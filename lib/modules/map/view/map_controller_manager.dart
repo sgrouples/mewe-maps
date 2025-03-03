@@ -28,8 +28,7 @@ class MapControllerManager {
 
   final ImageDownloader _imageDownloader;
 
-  MapControllerManager(this._imageDownloader,
-      {this.onMapSingleTap, this.onUserTap}) {
+  MapControllerManager(this._imageDownloader, {this.onMapSingleTap, this.onUserTap}) {
     mapController.listenerMapSingleTapping.addListener(() {
       onMapSingleTap?.call();
     });
@@ -45,10 +44,8 @@ class MapControllerManager {
     _lock.synchronized(() async {
       final currentPositions = _contactsPositions;
       for (final position in newPositions) {
-        final currentPosition = currentPositions
-            .firstOrNullWhere((it) => it.user.userId == position.user.userId);
-        if (currentPosition == null ||
-            currentPosition.geoPoint != position.geoPoint) {
+        final currentPosition = currentPositions.firstOrNullWhere((it) => it.user.userId == position.user.userId);
+        if (currentPosition == null || currentPosition.geoPoint != position.geoPoint) {
           if (currentPosition != null) {
             await mapController.changeLocationMarker(
               oldLocation: currentPosition.geoPoint,
@@ -77,24 +74,18 @@ class MapControllerManager {
         await mapController.setZoom(zoomLevel: 13, stepZoom: 1);
         await mapController.moveTo(newPosition.geoPoint);
         await _addMarker(newPosition);
-      } else if (currentPosition != null &&
-          newPosition != null &&
-          currentPosition.geoPoint != newPosition.geoPoint) {
-        await mapController.changeLocationMarker(
-            oldLocation: currentPosition.geoPoint,
-            newLocation: newPosition.geoPoint);
+      } else if (currentPosition != null && newPosition != null && currentPosition.geoPoint != newPosition.geoPoint) {
+        await mapController.changeLocationMarker(oldLocation: currentPosition.geoPoint, newLocation: newPosition.geoPoint);
       }
       myPosition = newPosition;
-      if (_trackedUser != null &&
-          _trackedUser?.user.userId == myPosition?.user.userId) {
+      if (_trackedUser != null && _trackedUser?.user.userId == myPosition?.user.userId) {
         mapController.moveTo(myPosition!.geoPoint, animate: true);
       }
     });
   }
 
   void tapGeopoint(GeoPoint geoPoint) {
-    final tappedUser =
-        _contactsPositions.firstOrNullWhere((it) => it.geoPoint == geoPoint);
+    final tappedUser = _contactsPositions.firstOrNullWhere((it) => it.geoPoint == geoPoint);
     if (tappedUser != null) {
       onUserTap?.call(tappedUser);
     } else {

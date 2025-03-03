@@ -30,8 +30,7 @@ class GetFollowedResponse extends Equatable {
   @override
   List<Object?> get props => [list, halLinks];
 
-  factory GetFollowedResponse.fromJson(Map<String, dynamic> json) =>
-      _$GetFollowedResponseFromJson(json);
+  factory GetFollowedResponse.fromJson(Map<String, dynamic> json) => _$GetFollowedResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$GetFollowedResponseToJson(this);
 }

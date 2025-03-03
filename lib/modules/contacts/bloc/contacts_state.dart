@@ -28,14 +28,7 @@ class ContactsState extends Equatable {
   final String contactLocationDataSearchQuery;
 
   @override
-  List<Object?> get props => [
-        shareMyPositionData,
-        contacts,
-        contactLocationData,
-        error,
-        contactsSearchQuery,
-        contactLocationDataSearchQuery
-      ];
+  List<Object?> get props => [shareMyPositionData, contacts, contactLocationData, error, contactsSearchQuery, contactLocationDataSearchQuery];
 }
 
 @CopyWith()
@@ -44,10 +37,7 @@ class MyPositionSharing extends Equatable {
   final int sharingSessionId;
   final DateTime sharedUntil;
 
-  const MyPositionSharing(
-      {required this.contact,
-      required this.sharingSessionId,
-      required this.sharedUntil});
+  const MyPositionSharing({required this.contact, required this.sharingSessionId, required this.sharedUntil});
 
   @override
   List<Object?> get props => [contact, sharingSessionId, sharedUntil];

@@ -18,8 +18,7 @@ const _KEY = "isAppVisible";
 typedef AppVisibilityCallback = void Function(bool isAppVisible);
 
 class AppLifecycleTracker with WidgetsBindingObserver {
-  static final SharedPreferencesAsync _preferencesAsync =
-      SharedPreferencesAsync();
+  static final SharedPreferencesAsync _preferencesAsync = SharedPreferencesAsync();
   static final Set<AppVisibilityCallback> _callbacks = {};
 
   static Future<bool> isAppVisible() async {

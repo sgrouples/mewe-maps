@@ -23,8 +23,7 @@ class HalLink extends Equatable {
   @override
   List<Object?> get props => [href];
 
-  factory HalLink.fromJson(Map<String, dynamic> json) =>
-      _$HalLinkFromJson(json);
+  factory HalLink.fromJson(Map<String, dynamic> json) => _$HalLinkFromJson(json);
 
   Map<String, dynamic> toJson() => _$HalLinkToJson(this);
 }

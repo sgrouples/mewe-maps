@@ -32,17 +32,9 @@ class AuthData extends Equatable {
       required this.cdnAccessParams});
 
   @override
-  List<Object?> get props => [
-        accessToken,
-        expires,
-        expiresIn,
-        refreshToken,
-        refreshTokenExpires,
-        cdnAccessParams
-      ];
+  List<Object?> get props => [accessToken, expires, expiresIn, refreshToken, refreshTokenExpires, cdnAccessParams];
 
-  factory AuthData.fromJson(Map<String, dynamic> json) =>
-      _$AuthDataFromJson(json);
+  factory AuthData.fromJson(Map<String, dynamic> json) => _$AuthDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuthDataToJson(this);
 }

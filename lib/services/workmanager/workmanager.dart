@@ -14,8 +14,7 @@ import 'package:mewe_maps/utils/logger.dart';
 import 'package:workmanager/workmanager.dart';
 
 const String _TAG = "workmanagerCallback";
-const String _NOT_PRECISE_BACKGROUND_SHARING_TASK =
-    "NotPreciseBackgroundSharing";
+const String _NOT_PRECISE_BACKGROUND_SHARING_TASK = "NotPreciseBackgroundSharing";
 
 @pragma('vm:entry-point')
 void workmanagerCallback() async {

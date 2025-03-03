@@ -73,8 +73,7 @@ class BackgroundLocationUpdateData {
 
   String toJson() => json.encode(toMap());
 
-  factory BackgroundLocationUpdateData.fromJson(String source) =>
-      BackgroundLocationUpdateData.fromMap(json.decode(source));
+  factory BackgroundLocationUpdateData.fromJson(String source) => BackgroundLocationUpdateData.fromMap(json.decode(source));
 
   @override
   bool operator ==(Object other) {
