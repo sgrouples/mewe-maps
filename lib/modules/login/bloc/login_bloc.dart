@@ -25,13 +25,7 @@ const _TAG = 'LoginBloc';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc(this._authenticationRepository)
-      : super(const LoginState(
-            emailOrPhoneNumber: "",
-            password: "",
-            error: "",
-            isLoading: false,
-            user: null,
-            challenge: null)) {
+      : super(const LoginState(emailOrPhoneNumber: "", password: "", error: "", isLoading: false, user: null, challenge: null)) {
     on<EmailOrPhoneNumberChanged>(_emailOrPhoneNumberChanged);
     on<PasswordChanged>(_passwordChanged);
     on<LoginSubmitted>(_loginSubmitted);
@@ -40,8 +34,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   final AuthenticationRepository _authenticationRepository;
 
-  void _emailOrPhoneNumberChanged(
-      EmailOrPhoneNumberChanged event, Emitter<LoginState> emit) {
+  void _emailOrPhoneNumberChanged(EmailOrPhoneNumberChanged event, Emitter<LoginState> emit) {
     emit(state.copyWith(emailOrPhoneNumber: event.emailOrPhoneNumber));
   }
 
@@ -51,22 +44,17 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   void _loginSubmitted(LoginSubmitted event, Emitter<LoginState> emit) async {
     if (state.emailOrPhoneNumber.isEmpty || state.password.isEmpty) {
-      emit(state.copyWith(
-          error: "Email / Phone Number and Password cannot be empty"));
+      emit(state.copyWith(error: "Email / Phone Number and Password cannot be empty"));
     } else {
       emit(state.copyWith(isLoading: true));
       try {
-        final challengesResponse =
-            await _authenticationRepository.getChallenges();
-        if (challengesResponse.challenges
-            .contains(ChallengesResponse.challengeCaptcha)) {
+        final challengesResponse = await _authenticationRepository.getChallenges();
+        if (challengesResponse.challenges.contains(ChallengesResponse.challengeCaptcha)) {
           emit(state.copyWith(challenge: ChallengesResponse.challengeCaptcha));
-        } else if (challengesResponse.challenges
-            .contains(ChallengesResponse.challengeArkose)) {
+        } else if (challengesResponse.challenges.contains(ChallengesResponse.challengeArkose)) {
           emit(state.copyWith(challenge: ChallengesResponse.challengeArkose));
         } else {
-          final LoginWithPasswordResponse loginResponse =
-              await _login(null, null);
+          final LoginWithPasswordResponse loginResponse = await _login(null, null);
           emit(state.copyWith(error: "", user: loginResponse.user));
         }
       } catch (error) {
@@ -75,29 +63,24 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     }
   }
 
-  void _challengeSubmitted(
-      ChallengeSubmitted event, Emitter<LoginState> emit) async {
+  void _challengeSubmitted(ChallengeSubmitted event, Emitter<LoginState> emit) async {
     emit(state.copyWith(challenge: null));
     try {
-      final LoginWithPasswordResponse loginResponse =
-          await _login(event.challenge, event.challengeToken);
+      final LoginWithPasswordResponse loginResponse = await _login(event.challenge, event.challengeToken);
       emit(state.copyWith(error: "", user: loginResponse.user));
     } catch (error) {
       emit(state.copyWith(error: error.toString(), isLoading: false));
     }
   }
 
-  Future<LoginWithPasswordResponse> _login(
-      String? challenge, String? challengeToken) async {
+  Future<LoginWithPasswordResponse> _login(String? challenge, String? challengeToken) async {
     String emailOrPhoneNumber = state.emailOrPhoneNumber;
     String password = state.password;
     final LoginWithPasswordResponse loginResponse;
     if (emailOrPhoneNumber.contains('@')) {
-      loginResponse = await _authenticationRepository.loginByEmail(
-          emailOrPhoneNumber, password, challenge, challengeToken);
+      loginResponse = await _authenticationRepository.loginByEmail(emailOrPhoneNumber, password, challenge, challengeToken);
     } else {
-      loginResponse = await _authenticationRepository.loginByNumber(
-          emailOrPhoneNumber, password, challenge, challengeToken);
+      loginResponse = await _authenticationRepository.loginByNumber(emailOrPhoneNumber, password, challenge, challengeToken);
     }
     StorageRepository.setUser(loginResponse.user);
     StorageRepository.setAuthData(loginResponse.getAuthData());

@@ -33,14 +33,7 @@ class AuthTokenResponse extends Equatable {
       required this.cdnAccessParams});
 
   @override
-  List<Object?> get props => [
-        accessToken,
-        expires,
-        expiresIn,
-        refreshToken,
-        refreshTokenExpires,
-        cdnAccessParams
-      ];
+  List<Object?> get props => [accessToken, expires, expiresIn, refreshToken, refreshTokenExpires, cdnAccessParams];
 
   AuthData getAuthData() {
     return AuthData(
@@ -53,8 +46,7 @@ class AuthTokenResponse extends Equatable {
     );
   }
 
-  factory AuthTokenResponse.fromJson(Map<String, dynamic> json) =>
-      _$AuthTokenResponseFromJson(json);
+  factory AuthTokenResponse.fromJson(Map<String, dynamic> json) => _$AuthTokenResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuthTokenResponseToJson(this);
 }

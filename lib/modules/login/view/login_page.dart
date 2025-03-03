@@ -29,8 +29,7 @@ class LoginPage extends StatelessWidget {
         context.read<AuthenticationRepository>(),
       ),
       child: BlocListener<LoginBloc, LoginState>(
-        listenWhen: (previous, current) =>
-            current.user != null || current.challenge != null,
+        listenWhen: (previous, current) => current.user != null || current.challenge != null,
         listener: (BuildContext context, LoginState state) {
           if (state.user != null) {
             context.go('/map');
@@ -65,15 +64,11 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               TextField(
-                onChanged: (value) => context
-                    .read<LoginBloc>()
-                    .add(EmailOrPhoneNumberChanged(value)),
-                decoration:
-                    const InputDecoration(labelText: "Email / Phone Number"),
+                onChanged: (value) => context.read<LoginBloc>().add(EmailOrPhoneNumberChanged(value)),
+                decoration: const InputDecoration(labelText: "Email / Phone Number"),
               ),
               TextField(
-                onChanged: (value) =>
-                    context.read<LoginBloc>().add(PasswordChanged(value)),
+                onChanged: (value) => context.read<LoginBloc>().add(PasswordChanged(value)),
                 decoration: const InputDecoration(labelText: "Password"),
                 obscureText: true,
               ),
@@ -82,9 +77,7 @@ class LoginPage extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: state.isLoading
-                        ? null
-                        : () => context.read<LoginBloc>().add(LoginSubmitted()),
+                    onPressed: state.isLoading ? null : () => context.read<LoginBloc>().add(LoginSubmitted()),
                     child: const Text("Login"),
                   ),
                   if (state.isLoading)
@@ -94,8 +87,7 @@ class LoginPage extends StatelessWidget {
                 ],
               ),
               if (state.error.isNotEmpty) const SizedBox(height: 20),
-              if (state.error.isNotEmpty)
-                Text(state.error, style: const TextStyle(color: Colors.red)),
+              if (state.error.isNotEmpty) Text(state.error, style: const TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -118,9 +110,7 @@ class LoginPage extends StatelessWidget {
       onMessageReceived: (JavaScriptMessage message) {
         Logger.log("Captcha", "onMessageReceived: ${message.message}");
         if (message.message != 'init') {
-          context
-              .read<LoginBloc>()
-              .add(ChallengeSubmitted(challenge, message.message));
+          context.read<LoginBloc>().add(ChallengeSubmitted(challenge, message.message));
           Navigator.of(context).pop();
         }
       },
@@ -137,9 +127,7 @@ class LoginPage extends StatelessWidget {
       'FlutterCallback',
       onMessageReceived: (JavaScriptMessage message) {
         Logger.log("FlutterCallback", "onMessageReceived: ${message.message}");
-        context
-            .read<LoginBloc>()
-            .add(ChallengeSubmitted(challenge, message.message));
+        context.read<LoginBloc>().add(ChallengeSubmitted(challenge, message.message));
         Navigator.of(context).pop();
       },
     );
@@ -147,8 +135,7 @@ class LoginPage extends StatelessWidget {
     _showChallengeDialog(context, controller, challenge);
   }
 
-  void _showChallengeDialog(
-      BuildContext context, WebViewController controller, String challenge) {
+  void _showChallengeDialog(BuildContext context, WebViewController controller, String challenge) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -164,9 +151,7 @@ class LoginPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                context
-                    .read<LoginBloc>()
-                    .add(ChallengeSubmitted(challenge, null));
+                context.read<LoginBloc>().add(ChallengeSubmitted(challenge, null));
                 Navigator.of(context).pop();
               },
               child: const Text('Cancel'),

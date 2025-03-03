@@ -29,11 +29,7 @@ class User extends Equatable {
   @JsonKey(name: "_links")
   final HalLinks halLinks;
 
-  const User(
-      {required this.userId,
-      required this.name,
-      required this.publicLinkId,
-      required this.halLinks});
+  const User({required this.userId, required this.name, required this.publicLinkId, required this.halLinks});
 
   bool isMe() {
     return userId == StorageRepository.user?.userId;

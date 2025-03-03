@@ -26,8 +26,7 @@ abstract class SharingLocationRepository {
   // Start sharing my position with the given user ids.
   // Time interval is in minutes.
   // sharingUser - data of the user who wants to share the location.
-  Future<void> startSharingSession(
-      User sharingUser, User recipientUser, int shareMinutes, bool isPrecise);
+  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes, bool isPrecise);
 
   // Stop sharing my position with the given session id.
   Future<void> stopSharingSession(String sessionId);

@@ -30,14 +30,7 @@ class MapState extends Equatable {
   final TrackingState trackingState;
 
   @override
-  List<Object?> get props => [
-        mapInitialized,
-        showPermissionsRationale,
-        selectedUser,
-        myPosition,
-        contactsPositions,
-        trackingState
-      ];
+  List<Object?> get props => [mapInitialized, showPermissionsRationale, selectedUser, myPosition, contactsPositions, trackingState];
 }
 
 enum TrackingState {

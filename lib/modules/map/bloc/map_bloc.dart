@@ -41,9 +41,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   StreamSubscription? _myPositionSubscription;
   StreamSubscription? _contactsLocationsSubscription;
 
-  MapBloc(this._myLocationRepository, this._sharingLocationRepository,
-      this._hiddenFromMapRepository)
-      : super(const MapState(mapInitialized: false)) {
+  MapBloc(this._myLocationRepository, this._sharingLocationRepository, this._hiddenFromMapRepository) : super(const MapState(mapInitialized: false)) {
     on<InitEvent>(_init);
     on<ObserveMyPosition>(
       (event, emit) => _observeMyPosition(),
@@ -76,12 +74,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     if (!await areAllPermissionsGranted()) {
       add(ShowPermissionsRationale());
     } else {
-      _myPositionSubscription =
-          _myLocationRepository.observePrecisePosition().listen((position) {
-        final up = UserPosition(
-            user: StorageRepository.user!,
-            position: position,
-            timestamp: position.timestamp);
+      _myPositionSubscription = _myLocationRepository.observePrecisePosition().listen((position) {
+        final up = UserPosition(user: StorageRepository.user!, position: position, timestamp: position.timestamp);
         add(UpdateMyPosition(up));
       });
     }
@@ -89,22 +83,16 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _stopObservingMyPosition() async {
     _myPositionSubscription?.cancel();
-    final sessions = await _sharingLocationRepository
-        .getSharingSessionsAsOwner(StorageRepository.user!.userId);
-    final hasPreciseSharing =
-        sessions?.any((session) => session.isPrecise) ?? false;
+    final sessions = await _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId);
+    final hasPreciseSharing = sessions?.any((session) => session.isPrecise) ?? false;
     if (!hasPreciseSharing) {
       await _myLocationRepository.cancelObservingPrecisePosition();
     }
   }
 
   void _observeContactsPosition() {
-    _contactsLocationsSubscription = CombineLatestStream.combine2(
-        _sharingLocationRepository
-            .observeContactsSharingData(StorageRepository.user!.userId),
-        _hiddenFromMapRepository.observeHiddenUsers(),
-        (contactsSharingData, hiddenUsers) =>
-            (contactsSharingData, hiddenUsers)).listen((data) {
+    _contactsLocationsSubscription = CombineLatestStream.combine2(_sharingLocationRepository.observeContactsSharingData(StorageRepository.user!.userId),
+        _hiddenFromMapRepository.observeHiddenUsers(), (contactsSharingData, hiddenUsers) => (contactsSharingData, hiddenUsers)).listen((data) {
       List<UserPosition> contactsLocations = [];
 
       for (final sharingData in data.$1) {
@@ -113,8 +101,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         }
         contactsLocations.add(UserPosition(
           user: sharingData.contact,
-          position:
-              sharingData.position,
+          position: sharingData.position,
           timestamp: sharingData.updatedAt,
           shareUntil: sharingData.shareUntil,
         ));
@@ -124,13 +111,11 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     });
   }
 
-  void _showPermissionsRationale(
-      ShowPermissionsRationale event, Emitter<MapState> emit) async {
+  void _showPermissionsRationale(ShowPermissionsRationale event, Emitter<MapState> emit) async {
     emit(state.copyWith(showPermissionsRationale: true));
   }
 
-  void _requestAllPermissions(
-      RequestAllPermissions event, Emitter<MapState> emit) async {
+  void _requestAllPermissions(RequestAllPermissions event, Emitter<MapState> emit) async {
     if (!await areAllPermissionsGranted()) {
       if (await requestAllPermissions()) {
         _observeMyPosition();
@@ -143,11 +128,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     emit(state.copyWith(myPosition: event.position));
   }
 
-  void _updateContactsPositions(
-      UpdateContactsLocation event, Emitter<MapState> emit) async {
+  void _updateContactsPositions(UpdateContactsLocation event, Emitter<MapState> emit) async {
     if (state.selectedUser != null) {
-      final selectedUser = event.positions.firstOrNullWhere(
-          (element) => element.user.userId == state.selectedUser!.user.userId);
+      final selectedUser = event.positions.firstOrNullWhere((element) => element.user.userId == state.selectedUser!.user.userId);
       if (selectedUser != null) {
         emit(state.copyWith(selectedUser: selectedUser));
       }
@@ -172,16 +155,14 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
-  void _closeSelectedUser(
-      CloseSelectedUser event, Emitter<MapState> emit) async {
+  void _closeSelectedUser(CloseSelectedUser event, Emitter<MapState> emit) async {
     emit(state.copyWith(selectedUser: null));
     if (state.trackingState == TrackingState.selectedUser) {
       emit(state.copyWith(trackingState: TrackingState.notTracking));
     }
   }
 
-  void _trackMyPositionClicked(
-      TrackMyPositionClicked event, Emitter<MapState> emit) async {
+  void _trackMyPositionClicked(TrackMyPositionClicked event, Emitter<MapState> emit) async {
     if (state.trackingState == TrackingState.myPosition) {
       emit(state.copyWith(trackingState: TrackingState.notTracking));
     } else {
@@ -189,8 +170,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
-  void _trackSelectedUserClicked(
-      TrackSelectedUserClicked event, Emitter<MapState> emit) async {
+  void _trackSelectedUserClicked(TrackSelectedUserClicked event, Emitter<MapState> emit) async {
     if (state.trackingState == TrackingState.selectedUser) {
       emit(state.copyWith(trackingState: TrackingState.notTracking));
     } else {
@@ -200,28 +180,21 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _userClicked(UserClicked event, Emitter<MapState> emit) async {
     if (state.selectedUser?.user == event.userPosition.user) {
-      emit(state.copyWith(
-          selectedUser: null, trackingState: TrackingState.notTracking));
+      emit(state.copyWith(selectedUser: null, trackingState: TrackingState.notTracking));
     } else {
-      emit(state.copyWith(
-          selectedUser: event.userPosition,
-          trackingState: TrackingState.selectedUser));
+      emit(state.copyWith(selectedUser: event.userPosition, trackingState: TrackingState.selectedUser));
     }
   }
 
-  void _userSelectedFromContacts(
-      UserSelectedFromContacts event, Emitter<MapState> emit) async {
-    final position = state.contactsPositions.firstOrNullWhere(
-            (position) => position.user.userId == event.user.userId) ??
+  void _userSelectedFromContacts(UserSelectedFromContacts event, Emitter<MapState> emit) async {
+    final position = state.contactsPositions.firstOrNullWhere((position) => position.user.userId == event.user.userId) ??
         (event.user == StorageRepository.user ? state.myPosition : null);
     if (position != null) {
-      emit(state.copyWith(
-          selectedUser: position, trackingState: TrackingState.selectedUser));
+      emit(state.copyWith(selectedUser: position, trackingState: TrackingState.selectedUser));
     }
   }
 
-  void _previousUserClicked(
-      PreviousUserClicked event, Emitter<MapState> emit) async {
+  void _previousUserClicked(PreviousUserClicked event, Emitter<MapState> emit) async {
     _changeUser(emit, -1);
   }
 
@@ -231,8 +204,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _changeUser(Emitter<MapState> emit, int change) {
     if (state.contactsPositions.length <= 1) return;
-    final currentIndex = state.contactsPositions.indexWhere(
-        (element) => element.user.userId == state.selectedUser!.user.userId);
+    final currentIndex = state.contactsPositions.indexWhere((element) => element.user.userId == state.selectedUser!.user.userId);
     int newIndex = state.selectedUser == null ? 0 : currentIndex + change;
     if (newIndex < 0) newIndex = state.contactsPositions.length - 1;
     if (newIndex > state.contactsPositions.length - 1) newIndex = 0;

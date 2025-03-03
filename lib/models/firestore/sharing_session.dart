@@ -41,8 +41,7 @@ class SharingSession extends Equatable {
   final bool isPrecise;
 
   @override
-  List<Object?> get props =>
-      [id, recipientId, recipientDataRaw, ownerId, ownerDataRaw, shareUntil, isPrecise];
+  List<Object?> get props => [id, recipientId, recipientDataRaw, ownerId, ownerDataRaw, shareUntil, isPrecise];
 
   const SharingSession(
       {required this.id,
@@ -53,8 +52,7 @@ class SharingSession extends Equatable {
       required this.shareUntil,
       required this.isPrecise});
 
-  factory SharingSession.fromJson(String id, Map<String, dynamic> json) =>
-      _$SharingSessionFromJson(json..addAll({"id": id}));
+  factory SharingSession.fromJson(String id, Map<String, dynamic> json) => _$SharingSessionFromJson(json..addAll({"id": id}));
 
   Map<String, dynamic> toJson() => _$SharingSessionToJson(this);
 }
