@@ -38,25 +38,20 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
-    if (!isMeweRequest(options.uri.host) ||
-        isCookieAuth(options) ||
-        isNoAuth(options)) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    if (!isMeweRequest(options.uri.host) || isCookieAuth(options) || isNoAuth(options)) {
       options.headers.remove(_COOKIE_AUTH_HEADER);
       options.headers.remove(_NO_AUTH_HEADER);
       return handler.next(options);
     }
 
-    if (options.uri.path.endsWith('/auth/login') ||
-        options.uri.path.endsWith('/account/challenges-available')) {
+    if (options.uri.path.endsWith('/auth/login') || options.uri.path.endsWith('/account/challenges-available')) {
       return handler.next(options);
     }
 
     if (options.uri.path.endsWith('/auth/token')) {
       AuthData authData = StorageRepository.authData!;
-      options.headers[_AUTH_KEY] =
-          'Sgrouples refreshToken=${authData.refreshToken}';
+      options.headers[_AUTH_KEY] = 'Sgrouples refreshToken=${authData.refreshToken}';
       return handler.next(options);
     }
 
@@ -67,8 +62,7 @@ class AuthInterceptor extends Interceptor {
     }
 
     AuthData authData = StorageRepository.authData!;
-    options.headers[_AUTH_KEY] =
-        'Sgrouples accessToken=${authData.accessToken}';
+    options.headers[_AUTH_KEY] = 'Sgrouples accessToken=${authData.accessToken}';
     options.headers[_COOKIE] = authData.cdnAccessParams.buildCdnCookie();
 
     return handler.next(options);
@@ -83,10 +77,8 @@ class AuthInterceptor extends Interceptor {
         StorageRepository.setAuthData(newAuthData);
         _tokenRefreshCompleter?.complete();
         final retryOptions = err.requestOptions;
-        retryOptions.headers[_AUTH_KEY] =
-            'Sgrouples accessToken=${newAuthData.accessToken}';
-        retryOptions.headers[_COOKIE] =
-            newAuthData.cdnAccessParams.buildCdnCookie();
+        retryOptions.headers[_AUTH_KEY] = 'Sgrouples accessToken=${newAuthData.accessToken}';
+        retryOptions.headers[_COOKIE] = newAuthData.cdnAccessParams.buildCdnCookie();
         final response = await _tokenRefreshDio.fetch(retryOptions);
         return handler.resolve(response);
       } catch (e) {
@@ -101,9 +93,7 @@ class AuthInterceptor extends Interceptor {
   }
 
   bool isMeweRequest(String host) {
-    return host.endsWith("mewe.com") ||
-        host.endsWith("groupl.es") ||
-        host.endsWith("sgr-labs.com");
+    return host.endsWith("mewe.com") || host.endsWith("groupl.es") || host.endsWith("sgr-labs.com");
   }
 
   bool isNoAuth(RequestOptions options) {

@@ -86,9 +86,7 @@ class ContactsPage extends StatelessWidget {
                                     actions: [
                                       TextButton(
                                         onPressed: () {
-                                          context
-                                              .read<ContactsBloc>()
-                                              .add(LogOutClicked(context));
+                                          context.read<ContactsBloc>().add(LogOutClicked(context));
                                         },
                                         child: const Text('Yes, log me out'),
                                       ),
@@ -125,22 +123,16 @@ class ContactsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMySharingLocationList() => BlocBuilder<ContactsBloc,
-          ContactsState>(
+  Widget _buildMySharingLocationList() => BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
-          previous.shareMyPositionData != current.shareMyPositionData ||
-          previous.contacts != current.contacts ||
-          previous.error != current.error,
+          previous.shareMyPositionData != current.shareMyPositionData || previous.contacts != current.contacts || previous.error != current.error,
       builder: (context, state) {
         if (state.error.isNotEmpty) {
-          return Center(
-              child:
-                  Text(state.error, style: const TextStyle(color: Colors.red)));
+          return Center(child: Text(state.error, style: const TextStyle(color: Colors.red)));
         }
 
         return ListView.builder(
-          itemCount: (state.shareMyPositionData?.length ?? 0) +
-              (state.contacts?.length ?? 0),
+          itemCount: (state.shareMyPositionData?.length ?? 0) + (state.contacts?.length ?? 0),
           itemBuilder: (context, index) {
             if (index < (state.shareMyPositionData?.length ?? 0)) {
               final sharingData = state.shareMyPositionData![index];
@@ -148,18 +140,14 @@ class ContactsPage extends StatelessWidget {
                 user: sharingData.contact,
                 trailing: ContactSwitch(
                   value: true,
-                  switchText: sharingData.sharedUntil.year == 9999
-                      ? "Until I stop"
-                      : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                  switchText: sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
                   onChanged: (newValue) {
-                    context.read<ContactsBloc>().add(
-                        ShareMyPositionStopped(sharingData.sharingSessionId));
+                    context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
                   },
                 ),
               );
             } else {
-              final contact = state
-                  .contacts![index - (state.shareMyPositionData?.length ?? 0)];
+              final contact = state.contacts![index - (state.shareMyPositionData?.length ?? 0)];
               return ContactListItem(
                   user: contact,
                   trailing: IconButton(
@@ -167,9 +155,7 @@ class ContactsPage extends StatelessWidget {
                       final minutes = await showIntervalModal(context, contact);
                       if (context.mounted) {
                         if (minutes != null) {
-                          context
-                              .read<ContactsBloc>()
-                              .add(ShareMyPositionStarted(contact, minutes));
+                          context.read<ContactsBloc>().add(ShareMyPositionStarted(contact, minutes));
                         }
                       }
                     },
@@ -224,14 +210,10 @@ class ContactsPage extends StatelessWidget {
   }
 
   Widget _buildSharedWithMeList() => BlocBuilder<ContactsBloc, ContactsState>(
-      buildWhen: (previous, current) =>
-          previous.contactLocationData != current.contactLocationData ||
-          previous.error != current.error,
+      buildWhen: (previous, current) => previous.contactLocationData != current.contactLocationData || previous.error != current.error,
       builder: (context, state) {
         if (state.error.isNotEmpty) {
-          return Center(
-              child:
-                  Text(state.error, style: const TextStyle(color: Colors.red)));
+          return Center(child: Text(state.error, style: const TextStyle(color: Colors.red)));
         }
 
         return ListView.builder(
@@ -248,9 +230,7 @@ class ContactsPage extends StatelessWidget {
                 value: state.contactLocationData![contact]!,
                 switchText: "Display on Map",
                 onChanged: (newValue) {
-                  context
-                      .read<ContactsBloc>()
-                      .add(DisplayOnTheMapChanged(contact, newValue));
+                  context.read<ContactsBloc>().add(DisplayOnTheMapChanged(contact, newValue));
                 },
               ),
             );

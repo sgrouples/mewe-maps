@@ -10,8 +10,7 @@
 
 import 'dart:async';
 
-import 'package:background_location_tracker/background_location_tracker.dart'
-    as blt;
+import 'package:background_location_tracker/background_location_tracker.dart' as blt;
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/isolates.dart';
 import 'package:mewe_maps/modules/app/app_lifecycle_tracker.dart';
@@ -39,8 +38,7 @@ void backgroundLocationTrackerCallback() async {
   await initializeIsolate();
 
   blt.BackgroundLocationTrackerManager.handleBackgroundUpdated((data) async {
-    if (!await shareMyLocationWithSessions(true) &&
-        !await AppLifecycleTracker.isAppVisible()) {
+    if (!await shareMyLocationWithSessions(true) && !await AppLifecycleTracker.isAppVisible()) {
       Logger.log(_TAG, "stopTracking in backgroundLocationTrackerCallback");
       blt.BackgroundLocationTrackerManager.stopTracking();
     }
@@ -75,8 +73,7 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
               loggingEnabled: true,
               androidConfig: blt.AndroidConfig(
                 notificationIcon: 'ic_launcher',
-                trackingInterval:
-                    Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC),
+                trackingInterval: Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC),
                 distanceFilterMeters: _LOCATION_DISTANCE_FILTER_METERS_ANDROID,
                 enableCancelTrackingAction: false,
               ),
@@ -97,9 +94,7 @@ class MyLocationRepositoryImpl implements MyLocationRepository {
         yield initialPosition;
       }
 
-      yield* Stream.periodic(
-              const Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC),
-              (_) => getLastKnownPosition())
+      yield* Stream.periodic(const Duration(seconds: PRECISE_TRACKING_INTERVAL_SEC), (_) => getLastKnownPosition())
           .asyncMap((futurePosition) async => await futurePosition)
           .where((position) => position != null)
           .cast<Position>()

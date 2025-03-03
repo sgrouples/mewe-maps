@@ -33,9 +33,7 @@ part 'contacts_state.dart';
 const _TAG = 'ContactsBloc';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-  ContactsBloc(this._contactsRepository, this._sharingLocationRepository,
-      this._hiddenFromMapRepository)
-      : super(const ContactsState(error: "")) {
+  ContactsBloc(this._contactsRepository, this._sharingLocationRepository, this._hiddenFromMapRepository) : super(const ContactsState(error: "")) {
     on<StartObservingData>(_loadContacts);
     on<ShareMyPositionStarted>(_startSharingPosition);
     on<ShareMyPositionStopped>(_stopSharingPosition);
@@ -54,31 +52,25 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   List<User> _contacts = [];
 
-  void _loadContacts(
-      StartObservingData event, Emitter<ContactsState> emit) async {
+  void _loadContacts(StartObservingData event, Emitter<ContactsState> emit) async {
     try {
       _contacts = await _contactsRepository.getContacts();
       emit(state.copyWith(error: ""));
       _observeContactsLocation();
       _observeMySharePositionData();
     } catch (error) {
-      emit(
-          state.copyWith(error: "Failed to get contacts. ${error.toString()}"));
+      emit(state.copyWith(error: "Failed to get contacts. ${error.toString()}"));
     }
   }
 
   void _observeMySharePositionData() {
-    _myPositionSubscription = _sharingLocationRepository
-        .observeSharingSessionsAsOwner(StorageRepository.user!.userId)
-        .startWith([]).listen((sharingSessions) {
+    _myPositionSubscription = _sharingLocationRepository.observeSharingSessionsAsOwner(StorageRepository.user!.userId).startWith([]).listen((sharingSessions) {
       _handleMySharingSessions(sharingSessions);
     });
   }
 
   void _refreshSharingSessions() {
-    _sharingLocationRepository
-        .getSharingSessionsAsOwner(StorageRepository.user!.userId)
-        .then((sharingSessions) {
+    _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId).then((sharingSessions) {
       if (sharingSessions == null) return;
       _handleMySharingSessions(sharingSessions);
     });
@@ -86,32 +78,23 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _handleMySharingSessions(List<UserSharingSession> sharingSessions) {
     List<MyPositionSharing> myPositions = sharingSessions.mapNotNull((session) {
-      final contact = _contacts
-          .firstOrNullWhere((contact) => contact.userId == session.recipientId);
+      final contact = _contacts.firstOrNullWhere((contact) => contact.userId == session.recipientId);
       if (contact == null) return null;
-      return MyPositionSharing(
-          contact: contact,
-          sharingSessionId: session.id,
-          sharedUntil: session.shareUntil);
+      return MyPositionSharing(contact: contact, sharingSessionId: session.id, sharedUntil: session.shareUntil);
     }).toList();
 
-    List<User> filteredContacts = _contacts
-        .whereNot((contact) => sharingSessions
-            .any((session) => session.recipientId == contact.userId))
-        .toList();
+    List<User> filteredContacts = _contacts.whereNot((contact) => sharingSessions.any((session) => session.recipientId == contact.userId)).toList();
     add(ShareMyPositionChanged(myPositions, filteredContacts));
   }
 
-  void _shareMyPositionChanged(
-      ShareMyPositionChanged event, Emitter<ContactsState> emit) async {
+  void _shareMyPositionChanged(ShareMyPositionChanged event, Emitter<ContactsState> emit) async {
     emit(state.copyWith(
       shareMyPositionData: event.shareMyPositionData,
       contacts: event.contacts,
     ));
   }
 
-  void _contactLocationDataChanged(
-      ContactLocationDataChanged event, Emitter<ContactsState> emit) async {
+  void _contactLocationDataChanged(ContactLocationDataChanged event, Emitter<ContactsState> emit) async {
     emit(state.copyWith(
       contactLocationData: event.contactLocationData,
     ));
@@ -119,12 +102,9 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _observeContactsLocation() {
     _contactsLocationsSubscription = CombineLatestStream.combine2(
-        _sharingLocationRepository
-            .observeContactsSharingData(StorageRepository.user!.userId)
-            .startWith([]),
+        _sharingLocationRepository.observeContactsSharingData(StorageRepository.user!.userId).startWith([]),
         _hiddenFromMapRepository.observeHiddenUsers().startWith([]),
-        (contactsSharingData, hiddenUsers) =>
-            (contactsSharingData, hiddenUsers)).listen((data) {
+        (contactsSharingData, hiddenUsers) => (contactsSharingData, hiddenUsers)).listen((data) {
       final contactLocationData = data.$1.map((sharingData) {
         return MapEntry(
           User.fromJson(jsonDecode(sharingData.userDataRaw)),
@@ -135,19 +115,16 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     });
   }
 
-  void _startSharingPosition(
-      ShareMyPositionStarted event, Emitter<ContactsState> emit) async {
+  void _startSharingPosition(ShareMyPositionStarted event, Emitter<ContactsState> emit) async {
     try {
-      await _sharingLocationRepository.startSharingSession(
-          StorageRepository.user!, event.contact, event.minutes, true);
+      await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.contact, event.minutes, true);
       _refreshSharingSessions();
     } catch (error) {
       Logger.log(_TAG, "Failed to share position. ${error.toString()}");
     }
   }
 
-  void _stopSharingPosition(
-      ShareMyPositionStopped event, Emitter<ContactsState> emit) async {
+  void _stopSharingPosition(ShareMyPositionStopped event, Emitter<ContactsState> emit) async {
     try {
       await _sharingLocationRepository.stopSharingSession(event.sessionId);
       _refreshSharingSessions();
@@ -156,14 +133,11 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     }
   }
 
-  void _displayOnTheMapChanged(
-      DisplayOnTheMapChanged event, Emitter<ContactsState> emit) async {
+  void _displayOnTheMapChanged(DisplayOnTheMapChanged event, Emitter<ContactsState> emit) async {
     try {
-      _hiddenFromMapRepository.setUserHidden(
-          event.contact.userId, !event.value);
+      _hiddenFromMapRepository.setUserHidden(event.contact.userId, !event.value);
     } catch (error) {
-      Logger.log(
-          _TAG, "Failed to update display on the map. ${error.toString()}");
+      Logger.log(_TAG, "Failed to update display on the map. ${error.toString()}");
     }
   }
 

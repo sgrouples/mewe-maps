@@ -32,15 +32,10 @@ class MeWeContactsRepository implements ContactsRepository {
         String? nextPageUrl;
 
         do {
-          final response = await (nextPageUrl == null
-              ? _userService.getFollowed()
-              : _userService.getFollowedNextPage(nextPageUrl));
+          final response = await (nextPageUrl == null ? _userService.getFollowed() : _userService.getFollowedNextPage(nextPageUrl));
 
           _cachedContacts!.addAll(
-            response.list
-                .where((it) => it.follower == true)
-                .map((it) => it.user)
-                .toList(),
+            response.list.where((it) => it.follower == true).map((it) => it.user).toList(),
           );
 
           nextPageUrl = response.halLinks?.nextPage?.href;

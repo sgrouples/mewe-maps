@@ -27,8 +27,7 @@ class Followed extends Equatable {
   @override
   List<Object?> get props => [user, follower];
 
-  factory Followed.fromJson(Map<String, dynamic> json) =>
-      _$FollowedFromJson(json);
+  factory Followed.fromJson(Map<String, dynamic> json) => _$FollowedFromJson(json);
 
   Map<String, dynamic> toJson() => _$FollowedToJson(this);
 }
