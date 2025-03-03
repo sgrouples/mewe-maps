@@ -18,7 +18,7 @@ flutter pub run build_runner build
 Before pushing anything to the default branch, format the code with:
 
 ```sh
-dart format .
+dart format . --line-length 160
 ```
 
 ## License
