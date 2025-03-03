@@ -49,11 +49,7 @@ class ContactSwitch extends StatelessWidget {
   final String switchText;
   final ValueChanged<bool> onChanged;
 
-  const ContactSwitch(
-      {super.key,
-      required this.value,
-      required this.switchText,
-      required this.onChanged});
+  const ContactSwitch({super.key, required this.value, required this.switchText, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {

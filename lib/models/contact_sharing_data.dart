@@ -33,15 +33,9 @@ class ContactSharingData extends Equatable {
   @override
   List<Object?> get props => [id, userDataRaw, data, shareUntil, contactId];
 
-  const ContactSharingData(
-      {required this.id,
-      required this.userDataRaw,
-      required this.data,
-      required this.shareUntil,
-      required this.contactId});
+  const ContactSharingData({required this.id, required this.userDataRaw, required this.data, required this.shareUntil, required this.contactId});
 
-  factory ContactSharingData.fromJson(Map<String, dynamic> json) =>
-      _$ContactSharingDataFromJson(json);
+  factory ContactSharingData.fromJson(Map<String, dynamic> json) => _$ContactSharingDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$ContactSharingDataToJson(this);
 }
@@ -59,8 +53,7 @@ class SharedData extends Equatable {
 
   const SharedData({required this.positionDataRaw, required this.updatedAt});
 
-  factory SharedData.fromJson(Map<String, dynamic> json) =>
-      _$SharedDataFromJson(json);
+  factory SharedData.fromJson(Map<String, dynamic> json) => _$SharedDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$SharedDataToJson(this);
 }

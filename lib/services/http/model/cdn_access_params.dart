@@ -33,8 +33,7 @@ class CdnAccessParams {
     return 'CloudFront-Policy=$cloudFrontPolicy; CloudFront-Signature=$cloudFrontSignature; CloudFront-Key-Pair-Id=$cloudFrontKeyPairId;';
   }
 
-  factory CdnAccessParams.fromJson(Map<String, dynamic> json) =>
-      _$CdnAccessParamsFromJson(json);
+  factory CdnAccessParams.fromJson(Map<String, dynamic> json) => _$CdnAccessParamsFromJson(json);
 
   Map<String, dynamic> toJson() => _$CdnAccessParamsToJson(this);
 }

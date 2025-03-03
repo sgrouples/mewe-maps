@@ -35,13 +35,11 @@ class HalLinks extends Equatable {
     } else if (url.isEmpty) {
       return "";
     } else {
-      return AuthConfig.meweImageHost +
-          url.replaceAll("{imageSize}", "400x400");
+      return AuthConfig.meweImageHost + url.replaceAll("{imageSize}", "400x400");
     }
   }
 
-  factory HalLinks.fromJson(Map<String, dynamic> json) =>
-      _$HalLinksFromJson(json);
+  factory HalLinks.fromJson(Map<String, dynamic> json) => _$HalLinksFromJson(json);
 
   Map<String, dynamic> toJson() => _$HalLinksToJson(this);
 }

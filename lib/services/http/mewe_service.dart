@@ -26,29 +26,21 @@ abstract class MeWeService {
 
   @POST('/api/v2/auth/login')
   @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByEmail(
-      @Field() String username, @Field() String password);
+  Future<LoginWithPasswordResponse> loginByEmail(@Field() String username, @Field() String password);
 
   @POST('/api/v2/auth/login')
   @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByNumber(
-      @Field() String phoneNumber, @Field() String password);
+  Future<LoginWithPasswordResponse> loginByNumber(@Field() String phoneNumber, @Field() String password);
 
   @POST('/api/v2/auth/login')
   @FormUrlEncoded()
   Future<LoginWithPasswordResponse> loginByEmailWithChallenge(
-      @Field() String username,
-      @Field() String password,
-      @Field("challenge_provider") String challenge,
-      @Field("session_token") String challengeToken);
+      @Field() String username, @Field() String password, @Field("challenge_provider") String challenge, @Field("session_token") String challengeToken);
 
   @POST('/api/v2/auth/login')
   @FormUrlEncoded()
   Future<LoginWithPasswordResponse> loginByNumberWithChallenge(
-      @Field() String phoneNumber,
-      @Field() String password,
-      @Field("challenge_provider") String challenge,
-      @Field("session_token") String challengeToken);
+      @Field() String phoneNumber, @Field() String password, @Field("challenge_provider") String challenge, @Field("session_token") String challengeToken);
 
   @GET('/api/v2/following/followed')
   @FormUrlEncoded()
@@ -56,6 +48,5 @@ abstract class MeWeService {
 
   @GET('{nextPageUrl}')
   @FormUrlEncoded()
-  Future<GetFollowedResponse> getFollowedNextPage(
-      @Path("nextPageUrl") String nextPageUrl);
+  Future<GetFollowedResponse> getFollowedNextPage(@Path("nextPageUrl") String nextPageUrl);
 }

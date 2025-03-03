@@ -26,8 +26,7 @@ class LoginWithPasswordRequest extends Equatable {
   @override
   List<Object> get props => [username, password];
 
-  factory LoginWithPasswordRequest.fromJson(Map<String, dynamic> json) =>
-      _$LoginWithPasswordRequestFromJson(json);
+  factory LoginWithPasswordRequest.fromJson(Map<String, dynamic> json) => _$LoginWithPasswordRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$LoginWithPasswordRequestToJson(this);
 }
