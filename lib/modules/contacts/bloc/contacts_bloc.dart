@@ -43,6 +43,12 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     on<LogOutClicked>(_logOutClicked);
     on<ShareMyPositionChanged>(_shareMyPositionChanged);
     on<ContactLocationDataChanged>(_contactLocationDataChanged);
+    on<ContactsSearchQueryChanged>((event, emit) {
+      emit(state.copyWith(contactsSearchQuery: event.query));
+    });
+    on<ContactLocationDataSearchQueryChanged>((event, emit) {
+      emit(state.copyWith(contactLocationDataSearchQuery: event.query));
+    });
   }
 
   final ContactsRepository _contactsRepository;

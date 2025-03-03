@@ -12,15 +12,23 @@ part of 'contacts_bloc.dart';
 
 @CopyWith()
 class ContactsState extends Equatable {
-  const ContactsState({this.shareMyPositionData, this.contacts, this.contactLocationData, required this.error});
+  const ContactsState(
+      {this.shareMyPositionData,
+      this.contacts,
+      this.contactLocationData,
+      required this.error,
+      this.contactsSearchQuery = "",
+      this.contactLocationDataSearchQuery = ""});
 
   final List<MyPositionSharing>? shareMyPositionData;
   final List<User>? contacts;
   final Map<User, bool>? contactLocationData;
   final String error;
+  final String contactsSearchQuery;
+  final String contactLocationDataSearchQuery;
 
   @override
-  List<Object?> get props => [shareMyPositionData, contacts, contactLocationData, error];
+  List<Object?> get props => [shareMyPositionData, contacts, contactLocationData, error, contactsSearchQuery, contactLocationDataSearchQuery];
 }
 
 @CopyWith()
