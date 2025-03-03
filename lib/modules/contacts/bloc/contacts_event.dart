@@ -73,3 +73,13 @@ class LogOutClicked extends ContactsEvent {
   @override
   List<Object?> get props => [context];
 }
+
+class ReloadContacts extends ContactsEvent {
+  @override
+  List<Object?> get props => ['ReloadContacts'];
+}
+
+class ReloadContactLocationData extends ContactsEvent {
+  @override
+  List<Object?> get props => ['ReloadContactLocationData'];
+}

@@ -35,6 +35,8 @@ const _TAG = 'ContactsBloc';
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
   ContactsBloc(this._contactsRepository, this._sharingLocationRepository, this._hiddenFromMapRepository) : super(const ContactsState(error: "")) {
     on<StartObservingData>(_loadContacts);
+    on<ReloadContacts>(_reloadContacts);
+    on<ReloadContactLocationData>(_reloadContactLocationData);
     on<ShareMyPositionStarted>(_startSharingPosition);
     on<ShareMyPositionStopped>(_stopSharingPosition);
     on<DisplayOnTheMapChanged>(_displayOnTheMapChanged);
@@ -61,6 +63,23 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     } catch (error) {
       emit(state.copyWith(error: "Failed to get contacts. ${error.toString()}"));
     }
+  }
+
+  void _reloadContacts(ReloadContacts event, Emitter<ContactsState> emit) async {
+    try {
+      _contacts = [];
+      emit(state.copyWith(contacts: null, shareMyPositionData: null));
+      _contacts = await _contactsRepository.getContacts(forceRefresh: true);
+      emit(state.copyWith(error: ""));
+      _refreshSharingSessions();
+    } catch (error) {
+      emit(state.copyWith(error: "Failed to get contacts. ${error.toString()}"));
+    }
+  }
+
+  void _reloadContactLocationData(ReloadContactLocationData event, Emitter<ContactsState> emit) async {
+    // it reloads automatically every 5 seconds
+    emit(state.copyWith(contactLocationData: null));
   }
 
   void _observeMySharePositionData() {

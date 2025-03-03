@@ -123,48 +123,83 @@ class ContactsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMySharingLocationList() => BlocBuilder<ContactsBloc, ContactsState>(
+  Widget _buildMySharingLocationList() {
+    return BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
           previous.shareMyPositionData != current.shareMyPositionData || previous.contacts != current.contacts || previous.error != current.error,
       builder: (context, state) {
-        if (state.error.isNotEmpty) {
-          return Center(child: Text(state.error, style: const TextStyle(color: Colors.red)));
+        if (state.contacts == null) {
+          return const Center(child: CircularProgressIndicator());
         }
 
-        return ListView.builder(
-          itemCount: (state.shareMyPositionData?.length ?? 0) + (state.contacts?.length ?? 0),
-          itemBuilder: (context, index) {
-            if (index < (state.shareMyPositionData?.length ?? 0)) {
-              final sharingData = state.shareMyPositionData![index];
-              return ContactListItem(
-                user: sharingData.contact,
-                trailing: ContactSwitch(
-                  value: true,
-                  switchText: sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
-                  onChanged: (newValue) {
-                    context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
-                  },
-                ),
-              );
-            } else {
-              final contact = state.contacts![index - (state.shareMyPositionData?.length ?? 0)];
-              return ContactListItem(
-                  user: contact,
-                  trailing: IconButton(
-                    onPressed: () async {
-                      final minutes = await showIntervalModal(context, contact);
-                      if (context.mounted) {
-                        if (minutes != null) {
-                          context.read<ContactsBloc>().add(ShareMyPositionStarted(contact, minutes));
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.add),
-                  ));
-            }
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<ContactsBloc>().add(ReloadContacts());
           },
+          child: state.error.isNotEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          state.error,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : state.contacts!.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('Empty'),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: (state.shareMyPositionData?.length ?? 0) + (state.contacts?.length ?? 0),
+                      itemBuilder: (context, index) {
+                        if (index < (state.shareMyPositionData?.length ?? 0)) {
+                          final sharingData = state.shareMyPositionData![index];
+                          return ContactListItem(
+                            user: sharingData.contact,
+                            trailing: ContactSwitch(
+                              value: true,
+                              switchText: sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                              onChanged: (newValue) {
+                                context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
+                              },
+                            ),
+                          );
+                        } else {
+                          final contact = state.contacts![index - (state.shareMyPositionData?.length ?? 0)];
+                          return ContactListItem(
+                            user: contact,
+                            trailing: IconButton(
+                              onPressed: () async {
+                                final minutes = await showIntervalModal(context, contact);
+                                if (context.mounted && minutes != null) {
+                                  context.read<ContactsBloc>().add(ShareMyPositionStarted(contact, minutes));
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                            ),
+                          );
+                        }
+                      },
+                    ),
         );
-      });
+      },
+    );
+  }
 
   Future<int?> showIntervalModal(BuildContext context, User contact) async {
     return await showModalBottomSheet(
@@ -209,32 +244,68 @@ class ContactsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSharedWithMeList() => BlocBuilder<ContactsBloc, ContactsState>(
+  Widget _buildSharedWithMeList() {
+    return BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) => previous.contactLocationData != current.contactLocationData || previous.error != current.error,
       builder: (context, state) {
-        if (state.error.isNotEmpty) {
-          return Center(child: Text(state.error, style: const TextStyle(color: Colors.red)));
+        if (state.contactLocationData == null) {
+          return const Center(child: CircularProgressIndicator());
         }
 
-        return ListView.builder(
-          itemCount: (state.contactLocationData?.length ?? 0),
-          itemBuilder: (context, index) {
-            final contact = state.contactLocationData?.keys.elementAt(index);
-            if (contact == null) return const SizedBox.shrink();
-            return ContactListItem(
-              user: contact,
-              onTapped: () {
-                Navigator.of(context).pop(contact);
-              },
-              trailing: ContactSwitch(
-                value: state.contactLocationData![contact]!,
-                switchText: "Display on Map",
-                onChanged: (newValue) {
-                  context.read<ContactsBloc>().add(DisplayOnTheMapChanged(contact, newValue));
-                },
-              ),
-            );
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<ContactsBloc>().add(ReloadContactLocationData());
           },
+          child: state.error.isNotEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          state.error,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : state.contactLocationData!.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('Empty'),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: state.contactLocationData?.length ?? 0,
+                      itemBuilder: (context, index) {
+                        final contact = state.contactLocationData?.keys.elementAt(index);
+                        if (contact == null) return const SizedBox.shrink();
+                        return ContactListItem(
+                          user: contact,
+                          onTapped: () {
+                            Navigator.of(context).pop(contact);
+                          },
+                          trailing: ContactSwitch(
+                            value: state.contactLocationData![contact]!,
+                            switchText: "Display on Map",
+                            onChanged: (newValue) {
+                              context.read<ContactsBloc>().add(DisplayOnTheMapChanged(contact, newValue));
+                            },
+                          ),
+                        );
+                      },
+                    ),
         );
-      });
+      },
+    );
+  }
 }
