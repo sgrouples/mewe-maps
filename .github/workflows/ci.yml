@@ -23,6 +23,7 @@ jobs:
         run: dart format --set-exit-if-changed --line-length 160 .
 
   android-build:
+    needs: format-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,10 +34,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Code generation
+        run: flutter pub run build_runner build
+
       - name: Build APK
         run: flutter build apk --debug
 
   ios-build:
+    needs: format-check
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +51,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Code generation
+        run: flutter pub run build_runner build
 
       - name: Build iOS app
         run: flutter build ios --no-codesign
