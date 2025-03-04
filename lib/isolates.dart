@@ -15,7 +15,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/supabase/supabase.dart';
 
-Future<void> initializeIsolate() async{
+Future<void> initializeIsolate() async {
   await dotenv.load(fileName: ".env");
 
   FlutterError.onError = (details) {
