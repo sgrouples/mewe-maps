@@ -34,7 +34,7 @@ class ContactsState extends Equatable {
 @CopyWith()
 class MyPositionSharing extends Equatable {
   final User contact;
-  final int sharingSessionId;
+  final String sharingSessionId;
   final DateTime sharedUntil;
 
   const MyPositionSharing({required this.contact, required this.sharingSessionId, required this.sharedUntil});

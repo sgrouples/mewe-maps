@@ -24,7 +24,7 @@ Future<bool> shareMyLocationWithSessions(bool isPrecise) async {
     final lastPosition = await MyLocationRepositoryImpl().getLastKnownPosition();
 
     if (lastPosition != null) {
-      final sharingRepository = SupabaseSharingLocationRepository();
+      final sharingRepository = FirestoreSharingLocationRepository();
       final sessions = await sharingRepository.getSharingSessionsAsOwner(userId);
       if (sessions != null && sessions.isNotEmpty) {
         final filteredSessions = sessions.filter((session) => session.isPrecise == isPrecise).toList();
