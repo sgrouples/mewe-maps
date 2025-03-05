@@ -16,11 +16,10 @@ import 'package:dartx/dartx.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/models/contact_sharing_data.dart';
 import 'package:mewe_maps/models/firestore/share_data.dart';
-import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/models/firestore/sharing_session.dart';
+import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 abstract class SharingLocationRepository {
   // Start sharing my position with the given user ids.
@@ -61,9 +60,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
         .where("share_until", isGreaterThan: Timestamp.now())
         .get()
         .then((value) {
-      return value.docs
-          .map((e) => SharingSession.fromJson(e.id, e.data()))
-          .toList();
+      return value.docs.map((e) => SharingSession.fromJson(e.id, e.data())).toList();
     });
   }
 
@@ -75,22 +72,17 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
             .where('recipient_id', isEqualTo: userId)
             .where("share_until", isGreaterThan: Timestamp.now())
             .snapshots()
-            .map((sessions) => sessions.docs
-                .map((e) => SharingSession.fromJson(e.id, e.data()))
-                .toList()),
+            .map((sessions) => sessions.docs.map((e) => SharingSession.fromJson(e.id, e.data())).toList()),
         _firestore
             .collection(SHARED_DATA_COLLECTION)
             .where('recipient_id', isEqualTo: userId)
             .snapshots()
-            .map((sharedData) => sharedData.docs
-                .map((e) => ShareData.fromJson(e.id, e.data()))
-                .toList()), (sessions, sharedData) {
+            .map((sharedData) => sharedData.docs.map((e) => ShareData.fromJson(e.id, e.data())).toList()), (sessions, sharedData) {
       final (cleanedSharedData, cleanedSessions) = _cleanUpOldData(sharedData, sessions);
 
       return cleanedSessions
           .map((session) {
-            final data = cleanedSharedData
-                .firstOrNullWhere((element) => element.sessionId == session.id);
+            final data = cleanedSharedData.firstOrNullWhere((element) => element.sessionId == session.id);
             if (data == null) return null;
             return ContactSharingData(
               id: session.id,
@@ -114,16 +106,13 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
         .where("share_until", isGreaterThan: Timestamp.now())
         .snapshots()
         .map((snapshot) {
-      final sessions = snapshot.docs
-          .map((e) => SharingSession.fromJson(e.id, e.data()))
-          .toList();
+      final sessions = snapshot.docs.map((e) => SharingSession.fromJson(e.id, e.data())).toList();
       return _cleanUpOldSessions(sessions);
     });
   }
 
   @override
-  Future<void> startSharingSession(User sharingUser, User recipientUser,
-      int shareMinutes, bool isPrecise) async {
+  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes, bool isPrecise) async {
     await _deleteOldSessionForUsers(sharingUser, recipientUser);
 
     return await _firestore.collection(SHARING_SESSION_COLLECTION).add({
@@ -131,9 +120,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
       'recipient_id': recipientUser.userId,
       'recipient_user_data': jsonEncode(recipientUser.toJson()),
       'owner_user_data': jsonEncode(sharingUser.toJson()),
-      'share_until': shareMinutes == TIME_INTERVAL_FOREVER
-          ? MAX_SHARE_UNTIL
-          : DateTime.now().add(Duration(minutes: shareMinutes)),
+      'share_until': shareMinutes == TIME_INTERVAL_FOREVER ? MAX_SHARE_UNTIL : DateTime.now().add(Duration(minutes: shareMinutes)),
       'is_precise': isPrecise,
     }).then((value) {
       Logger.log(_TAG, 'Sharing session started with id: ${value.id}');
@@ -149,25 +136,18 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
         .then((value) {
       value.docs.forEach((element) async {
         await element.reference.delete();
-        await _firestore
-            .collection(SHARED_DATA_COLLECTION)
-            .doc(element.id)
-            .delete();
+        await _firestore.collection(SHARED_DATA_COLLECTION).doc(element.id).delete();
       });
     });
   }
 
   @override
   Future<void> stopSharingSession(String sessionId) {
-    return _firestore
-        .collection(SHARING_SESSION_COLLECTION)
-        .doc(sessionId)
-        .delete();
+    return _firestore.collection(SHARING_SESSION_COLLECTION).doc(sessionId).delete();
   }
 
   @override
-  Future<void> uploadPosition(
-      Position position, List<SharingSession> sessions) {
+  Future<void> uploadPosition(Position position, List<SharingSession> sessions) {
     Logger.log(_TAG, 'Uploading position to ${sessions.length} sessions');
     List<Future> futures = [];
     for (var session in sessions) {
@@ -177,10 +157,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
         positionDataRaw: jsonEncode(position.toJson()),
         updatedAt: DateTime.now(),
       );
-      futures.add(_firestore
-          .collection(SHARED_DATA_COLLECTION)
-          .doc(data.sessionId)
-          .set(data.toJson()));
+      futures.add(_firestore.collection(SHARED_DATA_COLLECTION).doc(data.sessionId).set(data.toJson()));
     }
     return Future.value();
   }
@@ -190,10 +167,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
     List<SharingSession> newSessions = [];
     for (var session in sessions) {
       if (session.shareUntil.isBefore(now)) {
-        _firestore
-            .collection(SHARING_SESSION_COLLECTION)
-            .doc(session.id)
-            .delete();
+        _firestore.collection(SHARING_SESSION_COLLECTION).doc(session.id).delete();
       } else {
         newSessions.add(session);
       }
@@ -201,16 +175,12 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
     return newSessions;
   }
 
-  (List<ShareData>, List<SharingSession>) _cleanUpOldData(
-      List<ShareData> sharedData, List<SharingSession> sessions) {
+  (List<ShareData>, List<SharingSession>) _cleanUpOldData(List<ShareData> sharedData, List<SharingSession> sessions) {
     sessions = _cleanUpOldSessions(sessions);
     List<ShareData> newSharedData = [];
     for (var data in sharedData) {
       if (sessions.none((element) => element.id == data.sessionId)) {
-        _firestore
-            .collection(SHARED_DATA_COLLECTION)
-            .doc(data.sessionId)
-            .delete();
+        _firestore.collection(SHARED_DATA_COLLECTION).doc(data.sessionId).delete();
       } else {
         newSharedData.add(data);
       }
