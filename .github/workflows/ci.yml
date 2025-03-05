@@ -33,23 +33,23 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "${{ secrets.ENV }}" | base64 -d > .env
+          echo "${{ secrets.ENV }}" > .env
 
       - name: Create firebase.json file
         run: |
-          echo "${{ secrets.FIREBASE }}" | base64 -d > firebase.json
+          echo "${{ secrets.FIREBASE }}" > firebase.json
 
       - name: Create google-services.json file
         run: |
-          echo "${{ secrets.GOOGLESERVICES }}" | base64 -d > android/app/google-services.json
+          echo "${{ secrets.GOOGLESERVICES }}" > android/app/google-services.json
 
       - name: Create GoogleService-Info.plist file
         run: |
-          echo "${{ secrets.GOOGLESERVICEINFO }}" | base64 -d > ios/Runner/GoogleService-Info.plist
+          echo "${{ secrets.GOOGLESERVICEINFO }}" > ios/Runner/GoogleService-Info.plist
 
       - name: Create firebase_options.dart file
         run: |
-          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" > lib/services/firebase/firebase_options.dart
 
       - name: Install dependencies
         run: flutter pub get
@@ -71,23 +71,23 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "${{ secrets.ENV }}" | base64 -d > .env
+          echo "${{ secrets.ENV }}" > .env
 
       - name: Create firebase.json file
         run: |
-          echo "${{ secrets.FIREBASE }}" | base64 -d > firebase.json
+          echo "${{ secrets.FIREBASE }}" > firebase.json
 
       - name: Create google-services.json file
         run: |
-          echo "${{ secrets.GOOGLESERVICES }}" | base64 -d > android/app/google-services.json
+          echo "${{ secrets.GOOGLESERVICES }}" > android/app/google-services.json
 
       - name: Create GoogleService-Info.plist file
         run: |
-          echo "${{ secrets.GOOGLESERVICEINFO }}" | base64 -d > ios/Runner/GoogleService-Info.plist
+          echo "${{ secrets.GOOGLESERVICEINFO }}" > ios/Runner/GoogleService-Info.plist
 
       - name: Create firebase_options.dart file
         run: |
-          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" > lib/services/firebase/firebase_options.dart
 
       - name: Install dependencies
         run: flutter pub get
