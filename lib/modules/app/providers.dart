@@ -48,7 +48,7 @@ List<RepositoryProvider> repositoryProviders = [
       create: (context) => MeWeContactsRepository(
             RepositoryProvider.of<MeWeService>(context),
           )),
-  RepositoryProvider<SharingLocationRepository>(create: (context) => SupabaseSharingLocationRepository()),
+  RepositoryProvider<SharingLocationRepository>(create: (context) => FirestoreSharingLocationRepository()),
   RepositoryProvider<MyLocationRepository>(create: (context) => MyLocationRepositoryImpl()),
   RepositoryProvider<HiddenFromMapRepository>(create: (context) => MemoryHiddenFromMapRepository()),
 ];

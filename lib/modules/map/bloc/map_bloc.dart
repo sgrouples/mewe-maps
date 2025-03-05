@@ -9,7 +9,6 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -17,7 +16,6 @@ import 'package:dartx/dartx.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/models/user_position.dart';
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
@@ -102,9 +100,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           continue;
         }
         contactsLocations.add(UserPosition(
-          user: User.fromJson(jsonDecode(sharingData.userDataRaw)),
-          position: Position.fromMap(jsonDecode(sharingData.data.positionDataRaw)),
-          timestamp: sharingData.data.updatedAt,
+          user: sharingData.contact,
+          position: sharingData.position,
+          timestamp: sharingData.updatedAt,
           shareUntil: sharingData.shareUntil,
         ));
       }
