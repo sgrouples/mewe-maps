@@ -339,11 +339,12 @@ class ContactsPage extends StatelessWidget {
                             decoration: const InputDecoration(
                               prefixIcon: Icon(Icons.search),
                               hintText: 'Search...',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 0,
-                                horizontal: 8,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(16)),
+                                borderSide: BorderSide.none,
                               ),
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                             ),
                             onChanged: (query) {
                               context.read<ContactsBloc>().add(ContactLocationDataSearchQueryChanged(query));
