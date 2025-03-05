@@ -31,11 +31,25 @@ jobs:
         with:
           flutter-version: '3.27.1'
 
-      - name: Create dummy .env if missing
+      - name: Create .env file
         run: |
-          if [ ! -f .env ]; then
-            cp .env.example .env
-          fi
+          echo "${{ secrets.ENV }}" | base64 -d > .env
+
+      - name: Create firebase.json file
+        run: |
+          echo "${{ secrets.FIREBASE }}" | base64 -d > firebase.json
+
+      - name: Create google-services.json file
+        run: |
+          echo "${{ secrets.GOOGLESERVICES }}" | base64 -d > android/app/google-services.json
+
+      - name: Create GoogleService-Info.plist file
+        run: |
+          echo "${{ secrets.GOOGLESERVICEINFO }}" | base64 -d > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase_options.dart file
+        run: |
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
 
       - name: Install dependencies
         run: flutter pub get
@@ -55,11 +69,25 @@ jobs:
         with:
           flutter-version: '3.27.1'
 
-      - name: Create dummy .env if missing
+      - name: Create .env file
         run: |
-          if [ ! -f .env ]; then
-            cp .env.example .env
-          fi
+          echo "${{ secrets.ENV }}" | base64 -d > .env
+
+      - name: Create firebase.json file
+        run: |
+          echo "${{ secrets.FIREBASE }}" | base64 -d > firebase.json
+
+      - name: Create google-services.json file
+        run: |
+          echo "${{ secrets.GOOGLESERVICES }}" | base64 -d > android/app/google-services.json
+
+      - name: Create GoogleService-Info.plist file
+        run: |
+          echo "${{ secrets.GOOGLESERVICEINFO }}" | base64 -d > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase_options.dart file
+        run: |
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
 
       - name: Install dependencies
         run: flutter pub get
