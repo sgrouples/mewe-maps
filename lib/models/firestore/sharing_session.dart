@@ -17,7 +17,6 @@ part 'sharing_session.g.dart';
 
 @JsonSerializable()
 class SharingSession extends Equatable {
-
   @JsonKey(includeToJson: false)
   final String id;
 

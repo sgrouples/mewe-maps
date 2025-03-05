@@ -8,7 +8,6 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -18,7 +17,6 @@ part 'share_data.g.dart';
 
 @JsonSerializable()
 class ShareData extends Equatable {
-
   @JsonKey(includeToJson: false)
   final String sessionId;
 
@@ -35,15 +33,9 @@ class ShareData extends Equatable {
   @override
   List<Object?> get props => [sessionId, recipientId, positionDataRaw, updatedAt];
 
-  const ShareData(
-      {required this.sessionId,
-      required this.recipientId,
-      required this.positionDataRaw,
-      required this.updatedAt});
+  const ShareData({required this.sessionId, required this.recipientId, required this.positionDataRaw, required this.updatedAt});
 
-  factory ShareData.fromJson(String id, Map<String, dynamic> json) =>
-      _$ShareDataFromJson(json..addAll({"sessionId": id}));
+  factory ShareData.fromJson(String id, Map<String, dynamic> json) => _$ShareDataFromJson(json..addAll({"sessionId": id}));
 
   Map<String, dynamic> toJson() => _$ShareDataToJson(this);
-
 }
