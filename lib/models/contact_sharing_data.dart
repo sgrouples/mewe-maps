@@ -10,7 +10,6 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 import 'user.dart';
 
@@ -23,15 +22,8 @@ class ContactSharingData extends Equatable {
   final DateTime updatedAt;
 
   @override
-  List<Object?> get props =>
-      [id, contact, shareUntil, contactId, position, updatedAt];
+  List<Object?> get props => [id, contact, shareUntil, contactId, position, updatedAt];
 
   const ContactSharingData(
-      {required this.id,
-      required this.contact,
-      required this.shareUntil,
-      required this.contactId,
-      required this.position,
-      required this.updatedAt});
-
+      {required this.id, required this.contact, required this.shareUntil, required this.contactId, required this.position, required this.updatedAt});
 }
