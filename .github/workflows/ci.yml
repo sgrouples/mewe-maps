@@ -1,0 +1,99 @@
+name: MeWe Maps CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed --line-length 160 .
+
+  android-build:
+    needs: format-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV }}" | base64 -d > .env
+
+      - name: Create firebase.json file
+        run: |
+          echo "${{ secrets.FIREBASE }}" > firebase.json
+
+      - name: Create google-services.json file
+        run: |
+          echo "${{ secrets.GOOGLESERVICES }}" > android/app/google-services.json
+
+      - name: Create GoogleService-Info.plist file
+        run: |
+          echo "${{ secrets.GOOGLESERVICEINFO }}" > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase_options.dart file
+        run: |
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Code generation
+        run: flutter pub run build_runner build
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+  ios-build:
+    needs: format-check
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV }}" | base64 -d > .env
+
+      - name: Create firebase.json file
+        run: |
+          echo "${{ secrets.FIREBASE }}" > firebase.json
+
+      - name: Create google-services.json file
+        run: |
+          echo "${{ secrets.GOOGLESERVICES }}" > android/app/google-services.json
+
+      - name: Create GoogleService-Info.plist file
+        run: |
+          echo "${{ secrets.GOOGLESERVICEINFO }}" > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase_options.dart file
+        run: |
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Code generation
+        run: flutter pub run build_runner build
+
+      - name: Build iOS app
+        run: flutter build ios --no-codesign
