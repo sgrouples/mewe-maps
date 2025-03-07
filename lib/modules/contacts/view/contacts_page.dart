@@ -8,7 +8,6 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -132,12 +131,17 @@ class ContactsPage extends StatelessWidget {
           previous.error != current.error ||
           previous.contactsSearchQuery != current.contactsSearchQuery,
       builder: (context, state) {
-        if (state.contacts == null) {
+        if (state.contacts == null && state.shareMyPositionData == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final filteredContacts = state.contacts!.where((contact) {
+        final filteredContacts = state.contacts?.where((contact) {
           final name = contact.name.toLowerCase();
+          return name.contains(state.contactsSearchQuery.toLowerCase());
+        }).toList();
+
+        final filteredShareMyPositionData = state.shareMyPositionData?.where((data) {
+          final name = data.contact.name.toLowerCase();
           return name.contains(state.contactsSearchQuery.toLowerCase());
         }).toList();
 
@@ -160,7 +164,7 @@ class ContactsPage extends StatelessWidget {
                     ),
                   ],
                 )
-              : state.contacts!.isEmpty
+              : (state.shareMyPositionData!.isEmpty && state.contacts!.isEmpty)
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: const [
@@ -195,13 +199,10 @@ class ContactsPage extends StatelessWidget {
                         Expanded(
                           child: ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            itemCount: filteredContacts.length,
+                            itemCount: (filteredShareMyPositionData?.length ?? 0) + (filteredContacts?.length ?? 0),
                             itemBuilder: (context, index) {
-                              final contact = filteredContacts[index];
-                              final sharingData = state.shareMyPositionData?.firstOrNullWhere(
-                                (sharing) => sharing.contact.userId == contact.userId,
-                              );
-                              if (sharingData != null) {
+                              if (index < (filteredShareMyPositionData?.length ?? 0)) {
+                                final sharingData = filteredShareMyPositionData![index];
                                 return ContactListItem(
                                   user: sharingData.contact,
                                   trailing: ContactSwitch(
@@ -214,6 +215,7 @@ class ContactsPage extends StatelessWidget {
                                   ),
                                 );
                               } else {
+                                final contact = filteredContacts![index - (filteredShareMyPositionData?.length ?? 0)];
                                 return ContactListItem(
                                   user: contact,
                                   trailing: IconButton(
@@ -337,11 +339,12 @@ class ContactsPage extends StatelessWidget {
                             decoration: const InputDecoration(
                               prefixIcon: Icon(Icons.search),
                               hintText: 'Search...',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 0,
-                                horizontal: 8,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(16)),
+                                borderSide: BorderSide.none,
                               ),
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                             ),
                             onChanged: (query) {
                               context.read<ContactsBloc>().add(ContactLocationDataSearchQueryChanged(query));

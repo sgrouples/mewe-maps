@@ -20,7 +20,6 @@ import 'package:mewe_maps/models/firestore/sharing_session.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 abstract class SharingLocationRepository {
   // Start sharing my position with the given user ids.
