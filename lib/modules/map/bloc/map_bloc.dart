@@ -131,9 +131,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   void _updateContactsPositions(UpdateContactsLocation event, Emitter<MapState> emit) async {
     if (state.selectedUser != null) {
       final selectedUser = event.positions.firstOrNullWhere((element) => element.user.userId == state.selectedUser!.user.userId);
-      if (selectedUser != null) {
-        emit(state.copyWith(selectedUser: selectedUser));
-      }
+      emit(state.copyWith(selectedUser: selectedUser));
     }
     emit(state.copyWith(contactsPositions: event.positions));
   }
