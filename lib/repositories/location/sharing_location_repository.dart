@@ -66,7 +66,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
 
   @override
   Stream<List<ContactSharingData>> observeContactsSharingData(String userId) {
-    return CombineLatestStream.combine2(
+    return CombineLatestStream.combine3(
         _firestore
             .collection(SHARING_SESSION_COLLECTION)
             .where('recipient_id', isEqualTo: userId)
@@ -77,7 +77,8 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
             .collection(SHARED_DATA_COLLECTION)
             .where('recipient_id', isEqualTo: userId)
             .snapshots()
-            .map((sharedData) => sharedData.docs.map((e) => ShareData.fromJson(e.id, e.data())).toList()), (sessions, sharedData) {
+            .map((sharedData) => sharedData.docs.map((e) => ShareData.fromJson(e.id, e.data())).toList()),
+        Stream.periodic(const Duration(seconds: 10)), (sessions, sharedData, _) {
       final (cleanedSharedData, cleanedSessions) = _cleanUpOldData(sharedData, sessions);
 
       return cleanedSessions
