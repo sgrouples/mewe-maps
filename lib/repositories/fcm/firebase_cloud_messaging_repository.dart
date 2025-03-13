@@ -12,17 +12,17 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:mewe_maps/models/firestore/firestore_constants.dart';
 import 'package:mewe_maps/utils/logger.dart';
 
 class FirebaseCloudMessagingRepository {
   static const String _TAG = "FirebaseCloudMessagingRepository";
-  static const String _COLLECTION_FCM_TOKENS = "fcmtokens";
 
   StreamSubscription? _subscription;
 
   void observeTokenForUser(String userId) {
     _subscription = FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
-      FirebaseFirestore.instance.collection(_COLLECTION_FCM_TOKENS).doc(userId).set({"token": fcmToken});
+      FirebaseFirestore.instance.collection(FirestoreConstants.COLLECTION_USERS_PRIVATE_DATA).doc(userId).set({"fcm_token": fcmToken});
     }, onError: (e) {
       Logger.log(_TAG, "Error observing FCM token: $e");
     });
