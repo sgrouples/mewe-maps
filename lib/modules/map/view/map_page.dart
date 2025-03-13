@@ -40,6 +40,7 @@ class MapPageState extends State<MapPage> {
         context.read(),
         context.read(),
         context.read(),
+        context.read(),
       ),
       child: RepositoryProvider(
         create: (context) => _buildMapControllerManager(context),

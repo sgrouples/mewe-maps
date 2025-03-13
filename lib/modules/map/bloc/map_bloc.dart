@@ -18,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/models/user_position.dart';
+import 'package:mewe_maps/repositories/fcm/firebase_cloud_messaging_repository.dart';
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
@@ -28,7 +29,9 @@ import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'map_bloc.g.dart';
+
 part 'map_event.dart';
+
 part 'map_state.dart';
 
 const _TAG = 'MapBloc';
@@ -37,11 +40,17 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   final MyLocationRepository _myLocationRepository;
   final SharingLocationRepository _sharingLocationRepository;
   final HiddenFromMapRepository _hiddenFromMapRepository;
+  final FirebaseCloudMessagingRepository _firebaseCloudMessagingRepository;
 
   StreamSubscription? _myPositionSubscription;
   StreamSubscription? _contactsLocationsSubscription;
 
-  MapBloc(this._myLocationRepository, this._sharingLocationRepository, this._hiddenFromMapRepository) : super(const MapState(mapInitialized: false)) {
+  MapBloc(
+    this._myLocationRepository,
+    this._sharingLocationRepository,
+    this._hiddenFromMapRepository,
+    this._firebaseCloudMessagingRepository,
+  ) : super(const MapState(mapInitialized: false)) {
     on<InitEvent>(_init);
     on<ObserveMyPosition>(
       (event, emit) => _observeMyPosition(),
@@ -67,6 +76,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   void _init(InitEvent event, Emitter<MapState> emit) async {
     _observeContactsPosition();
     _observeMyPosition();
+    _startObservingFcmToken();
     emit(state.copyWith(mapInitialized: true));
   }
 
@@ -209,10 +219,18 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     add(UserClicked(state.contactsPositions[newIndex]));
   }
 
+  void _startObservingFcmToken() {
+    final userId = StorageRepository.user?.userId;
+    if (userId != null) {
+      _firebaseCloudMessagingRepository.observeTokenForUser(userId);
+    }
+  }
+
   @override
   Future<void> close() async {
     _contactsLocationsSubscription?.cancel();
     _stopObservingMyPosition();
+    _firebaseCloudMessagingRepository.close();
     return super.close();
   }
 }
