@@ -13,5 +13,6 @@ class FirestoreConstants {
   static const String COLLECTION_SHARING_SESSIONS = "sharing_sessions";
   static const String COLLECTION_SHARING_DATA = "shared_data";
   static const String COLLECTION_USERS_PRIVATE_DATA = "users_private_data";
+  static const String COLLECTION_LOCATION_REQUESTS = "location_requests";
 
 }

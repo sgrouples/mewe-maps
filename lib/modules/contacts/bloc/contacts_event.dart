@@ -38,18 +38,19 @@ class ShareMyPositionStopped extends ContactsEvent {
 
 class ShareMyPositionChanged extends ContactsEvent {
   final List<MyPositionSharing>? shareMyPositionData;
-  final List<User>? contacts;
+  final List<User>? contactsToShareWith;
 
-  ShareMyPositionChanged(this.shareMyPositionData, this.contacts);
+  ShareMyPositionChanged(this.shareMyPositionData, this.contactsToShareWith);
 
   @override
-  List<Object?> get props => [shareMyPositionData, contacts];
+  List<Object?> get props => [shareMyPositionData, contactsToShareWith];
 }
 
 class ContactLocationDataChanged extends ContactsEvent {
   final Map<User, bool>? contactLocationData;
+  final Map<User, bool> contactsToRequestLocation;
 
-  ContactLocationDataChanged(this.contactLocationData);
+  ContactLocationDataChanged(this.contactLocationData, this.contactsToRequestLocation);
 
   @override
   List<Object?> get props => [contactLocationData];
@@ -84,20 +85,29 @@ class ReloadContactLocationData extends ContactsEvent {
   List<Object?> get props => ['ReloadContactLocationData'];
 }
 
-class ContactsSearchQueryChanged extends ContactsEvent {
+class SearchQueryChanged extends ContactsEvent {
   final String query;
 
-  ContactsSearchQueryChanged(this.query);
+  SearchQueryChanged(this.query);
 
   @override
   List<Object?> get props => ['ContactsSearchQueryChanged'];
 }
 
-class ContactLocationDataSearchQueryChanged extends ContactsEvent {
-  final String query;
+class AskForLocationClicked extends ContactsEvent {
+  final User user;
 
-  ContactLocationDataSearchQueryChanged(this.query);
+  AskForLocationClicked(this.user);
 
   @override
-  List<Object?> get props => ['ContactLocationDataSearchQueryChanged'];
+  List<Object?> get props => [user];
+}
+
+class CancelRequestForLocationClicked extends ContactsEvent {
+  final User user;
+
+  CancelRequestForLocationClicked(this.user);
+
+  @override
+  List<Object?> get props => [user];
 }

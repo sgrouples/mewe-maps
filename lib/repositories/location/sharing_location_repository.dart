@@ -16,6 +16,7 @@ import 'package:dartx/dartx.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/models/contact_sharing_data.dart';
 import 'package:mewe_maps/models/firestore/firestore_constants.dart';
+import 'package:mewe_maps/models/firestore/location_request.dart';
 import 'package:mewe_maps/models/firestore/share_data.dart';
 import 'package:mewe_maps/models/firestore/sharing_session.dart';
 import 'package:mewe_maps/models/user.dart';
@@ -42,6 +43,18 @@ abstract class SharingLocationRepository {
 
   // Observe the positions of contacts' who share location with user.
   Stream<List<ContactSharingData>> observeContactsSharingData(String userId);
+
+  // Request location from the contact.
+  Future<void> requestLocationFromContact(String requestingUserId, String contactUserId);
+
+  // Cancel the location request.
+  Future<void> cancelRequestForLocation(String requestingUserId, String contactUserId);
+
+  // Observe location requests from other users.
+  Stream<List<LocationRequest>> observeOtherUsersLocationRequests(String userId);
+
+  // Observe your own location requests.
+  Stream<List<LocationRequest>> observeMyLocationRequests(String userId);
 }
 
 const _TAG = 'FirestoreSharingLocationRepository';
@@ -78,7 +91,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
             .snapshots()
             .map((sharedData) => sharedData.docs.map((e) => ShareData.fromJson(e.id, e.data())).toList()),
         Stream.periodic(const Duration(seconds: 10)), (sessions, sharedData, _) {
-      final (cleanedSharedData, cleanedSessions) = _cleanUpOldData(sharedData, sessions);
+      final (cleanedSharedData, cleanedSessions) = _cleanUpOldSharingData(sharedData, sessions);
 
       return cleanedSessions
           .map((session) {
@@ -162,6 +175,41 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
     return Future.value();
   }
 
+  @override
+  Future<void> requestLocationFromContact(String requestingUserId, String requestedUserId) async {
+    await _cleanUpOldRequestsForUser(requestingUserId, requestedUserId);
+    await _firestore
+        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
+        .add(LocationRequest(requestingUserId: requestingUserId, requestedUserId: requestedUserId, requestedAt: DateTime.now()).toJson());
+  }
+
+  @override
+  Future<void> cancelRequestForLocation(String requestingUserId, String recipientUserId) async {
+    await _cleanUpOldRequestsForUser(requestingUserId, recipientUserId);
+  }
+
+  @override
+  Stream<List<LocationRequest>> observeOtherUsersLocationRequests(String userId) {
+    return _firestore
+        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
+        .where('requested_user_id', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((e) => LocationRequest.fromJson(e.id, e.data())).toList();
+    });
+  }
+
+  @override
+  Stream<List<LocationRequest>> observeMyLocationRequests(String userId) {
+    return _firestore
+        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
+        .where('requesting_user_id', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((e) => LocationRequest.fromJson(e.id, e.data())).toList();
+    });
+  }
+
   List<SharingSession> _cleanUpOldSessions(List<SharingSession> sessions) {
     final now = DateTime.now();
     List<SharingSession> newSessions = [];
@@ -175,7 +223,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
     return newSessions;
   }
 
-  (List<ShareData>, List<SharingSession>) _cleanUpOldData(List<ShareData> sharedData, List<SharingSession> sessions) {
+  (List<ShareData>, List<SharingSession>) _cleanUpOldSharingData(List<ShareData> sharedData, List<SharingSession> sessions) {
     sessions = _cleanUpOldSessions(sessions);
     List<ShareData> newSharedData = [];
     for (var data in sharedData) {
@@ -186,5 +234,18 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
       }
     }
     return (newSharedData, sessions);
+  }
+
+  Future<void> _cleanUpOldRequestsForUser(String requestingUserId, String requestedUserId) async {
+    await _firestore
+        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
+        .where('requesting_user_id', isEqualTo: requestingUserId)
+        .where('requested_user_id', isEqualTo: requestedUserId)
+        .get()
+        .then((value) async {
+      for (var doc in value.docs) {
+        await doc.reference.delete();
+      }
+    });
   }
 }
