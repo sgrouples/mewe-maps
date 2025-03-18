@@ -31,12 +31,14 @@ before_all do |options|
   sh("rm -rf ../build")
 
   if is_ci
-    unlock_keychain(
-      password: ENV["KEYCHAIN_PASSWORD"]
+    delete_keychain(name: "tmp")
+    create_keychain(
+        name: "tmp",
+        password: ENV["KEYCHAIN_PASSWORD"],
+        default_keychain: true,
+        unlock: true
     )
   end
-
-  Dotenv.overload '../build.env'
 end
 
 desc "Updates certificates and profiles, no options."
@@ -46,12 +48,12 @@ lane :generate_provisioning do
 end
 
 desc """
-    Builds Location App target.
+    Builds app target.
 
     ##Options:
 
-    * display_name - will set the Consumer .plist display name.
-    * build_number - will set the Consumer .plist build number.
+    * display_name - will set the .plist display name.
+    * build_number - will set the .plist build number.
     * scheme - scheme to build, default 'Consumer'
     * configuration - scheme build configuration, default 'AdHoc'
     * commitMessageKey - key required for the lane to execute
@@ -110,7 +112,9 @@ private_lane :sync_match do |options|
     readonly: options[:readonly],
     app_identifier: options[:app_identifier],
     force_for_new_devices: true,
-    verbose: true
+    verbose: true,
+    keychain_name: "tmp",
+    keychain_password: ENV["KEYCHAIN_PASSWORD"]
   )
 end
 
@@ -225,9 +229,9 @@ private_lane :get_service_credentials_file do
   puts "#{Dir.pwd}"
   case build_type()
     when BuildType::MASTER
-      next "#{Dir.pwd}/service-credentials-mewe-ios-location-master.json"
+      next "#{ENV['RUNNER_TEMP']}/service-credentials-mewe-ios-location-master.json"
     else
-      next "#{Dir.pwd}/service-credentials-mewe-ios-location-master.json"
+      next "#{ENV['RUNNER_TEMP']}/service-credentials-mewe-ios-location-master.json"
   end
 end
 

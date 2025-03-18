@@ -64,6 +64,13 @@ jobs:
   ios-build:
     needs: format-check
     runs-on: macos-latest
+    env:
+      APP_STORE_CONNECT_API_KEY_B64: ${{ secrets.APP_STORE_CONNECT_API_KEY_B64 }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      RUNNER_TEMP: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -98,3 +105,24 @@ jobs:
 
       - name: Build iOS app
         run: flutter build ios --no-codesign
+
+      - name: Decode Firebase Service Credentials files
+        run: |
+          echo "${{ secrets.SERVICE_CREDENTIALS_MASTER_B64 }}" | base64 --decode > ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+
+      - name: Generate provisioning
+        run: |
+          pwd
+          bundle exec fastlane generate_provisioning
+
+      - name: Build app
+        env:
+          SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+        run: |
+          bundle exec fastlane build scheme:Runner
+
+      - name: Deploy to App Distribution
+        env:
+          SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+        run: |
+            bundle exec fastlane upload scheme:Runner
