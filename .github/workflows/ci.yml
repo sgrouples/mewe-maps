@@ -72,42 +72,42 @@ jobs:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-#      - uses: subosito/flutter-action@v2
-#        with:
-#          flutter-version: '3.27.1'
-#
-#      - name: Create .env file
-#        run: |
-#          echo "${{ secrets.ENV }}" | base64 -d > .env
-#
-#      - name: Create firebase.json file
-#        run: |
-#          echo "${{ secrets.FIREBASE }}" > firebase.json
-#
-#      - name: Create google-services.json file
-#        run: |
-#          echo "${{ secrets.GOOGLESERVICES }}" > android/app/google-services.json
-#
-#      - name: Create GoogleService-Info.plist file
-#        run: |
-#          echo "${{ secrets.GOOGLESERVICEINFO }}" > ios/Runner/GoogleService-Info.plist
-#
-#      - name: Create firebase_options.dart file
-#        run: |
-#          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
-#
-#      - name: Set RUNNER_TEMP variable
-#        run: |
-#          echo "RUNNER_TEMP=${{ runner.temp }}" >> $GITHUB_ENV
-#
-#      - name: Install dependencies
-#        run: flutter pub get
-#
-#      - name: Code generation
-#        run: flutter pub run build_runner build
-#
-#      - name: Build Flutter
-#        run: flutter build ios --no-codesign
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV }}" | base64 -d > .env
+
+      - name: Create firebase.json file
+        run: |
+          echo "${{ secrets.FIREBASE }}" > firebase.json
+
+      - name: Create google-services.json file
+        run: |
+          echo "${{ secrets.GOOGLESERVICES }}" > android/app/google-services.json
+
+      - name: Create GoogleService-Info.plist file
+        run: |
+          echo "${{ secrets.GOOGLESERVICEINFO }}" > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase_options.dart file
+        run: |
+          echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
+
+      - name: Set RUNNER_TEMP variable
+        run: |
+          echo "RUNNER_TEMP=${{ runner.temp }}" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Code generation
+        run: flutter pub run build_runner build
+
+      - name: Build Flutter
+        run: flutter build ios --no-codesign
 
       - name: Decode Firebase Service Credentials files
         run: |
