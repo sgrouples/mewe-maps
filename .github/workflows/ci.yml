@@ -120,6 +120,13 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add - <<< "${MATCH_DEPLOY_KEY}"
 
+      - name: Debug SSH key for match
+        env:
+          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
+        run: |
+          ssh-add -l
+          ssh -vT git@github.com
+
       - name: Install gems
         run: |
           cd ./ios
