@@ -19,9 +19,18 @@ import 'package:mewe_maps/services/http/image_downloader.dart';
 import 'package:synchronized/synchronized.dart';
 
 class MapControllerManager {
-  final mapController = MapController(
-    initMapWithUserPosition: const UserTrackingOption(enableTracking: false),
-  );
+  final mapController = MapController.customLayer(
+      initMapWithUserPosition: const UserTrackingOption(enableTracking: false),
+      customTile: CustomTile(
+        sourceName: "mewemapstile",
+        tileExtension: ".png",
+        urlsServers: [
+          TileURLs(
+            url: "https://maps-cdn1.amsos.cz/styles/positron/{z}/{x}/{y}",
+            subdomains: ['a', 'b', 'c'],
+          )
+        ],
+      ));
 
   final VoidCallback? onMapSingleTap;
   final Function(UserPosition)? onUserTap;

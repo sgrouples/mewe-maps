@@ -28,26 +28,21 @@ class AppPage extends StatelessWidget {
   }
 
   Widget buildPage(BuildContext context) {
-    const lightColorScheme = ColorScheme.light(
-      primary: Colors.green,
-      secondary: Colors.green,
-    );
-
     const darkColorScheme = ColorScheme.dark(
-      primary: Colors.green,
-      secondary: Colors.green,
+      primary: Colors.pink,
+      secondary: Colors.pink,
     );
 
     final app = MaterialApp.router(
       theme: ThemeData(
-        colorScheme: lightColorScheme,
+        colorScheme: darkColorScheme,
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: darkColorScheme,
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
     );
 
