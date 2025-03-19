@@ -28,23 +28,21 @@ tests_devices = ["iPhone 15"]
 commit_file_name = "last_success_commit"
 
 before_all do |options|
-  sh("rm -rf ../build")
-
-  if is_ci
-    delete_keychain(name: "tmp") if File.exist? File.expand_path("~/Library/Keychains/tmp-db")
-    create_keychain(
-        name: "tmp",
-        password: ENV["KEYCHAIN_PASSWORD"],
-        default_keychain: true,
-        unlock: true
-    )
-  end
-
   Dotenv.overload '../.env'
 end
 
 desc "Updates certificates and profiles, no options."
 lane :generate_provisioning do
+  if is_ci
+    delete_keychain(name: "tmp") if File.exist? File.expand_path("~/Library/Keychains/tmp-db")
+    create_keychain(
+      name: "tmp",
+      password: ENV["KEYCHAIN_PASSWORD"],
+      default_keychain: true,
+      unlock: true
+    )
+  end
+
   sync_match_adhoc()
   sync_match_development()
 end
@@ -223,7 +221,8 @@ private_lane :build_location_app do |options|
       export_options: {
         provisioningProfiles: {
           "com.locationfinder.testing" => "match AdHoc com.locationfinder.testing"
-        }
+        },
+        signingKeychainPath: "~/Library/Keychains/tmp-db"
       }
     )
 end
