@@ -39,6 +39,8 @@ before_all do |options|
         unlock: true
     )
   end
+
+  Dotenv.overload '../.env'
 end
 
 desc "Updates certificates and profiles, no options."
@@ -123,7 +125,7 @@ lane :sync_match_development do
   sync_match(
     type: "development",
     app_identifier: [
-      "com.mewemaps.testing"
+      "com.locationfinder.testing"
     ],
     readonly: false
   )
@@ -134,7 +136,7 @@ lane :sync_match_adhoc do
   sync_match(
     type: "adhoc",
     app_identifier: [
-      "com.mewemaps.testing"
+      "com.locationfinder.testing"
     ],
     readonly: false
   )
@@ -151,7 +153,7 @@ lane :regenerate_match_development do
     in_house: false
   )
   app_identifier = [
-    "com.mewemaps.testing"
+    "com.locationfinder.testing"
   ]
 
   # nuke distribution certificate and provisioning profile for development
@@ -164,6 +166,35 @@ lane :regenerate_match_development do
   # create distribution certificate and provisioning profile for development
   match(
     type: "development",
+    app_identifier: app_identifier,
+    api_key: api_key
+  )
+end
+
+desc "Nuke and recreate certificates and provisioning profiles for adhoc"
+lane :regenerate_match_adhoc do
+  api_key = app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_B64"],
+    is_key_content_base64: true,
+    duration: 500,
+    in_house: false
+  )
+  app_identifier = [
+    "com.locationfinder.testing"
+  ]
+
+  # nuke distribution certificate and provisioning profile for development
+  match_nuke(
+    type: "adhoc",
+    app_identifier: app_identifier,
+    api_key: api_key
+  )
+
+  # create distribution certificate and provisioning profile for development
+  match(
+    type: "adhoc",
     app_identifier: app_identifier,
     api_key: api_key
   )
@@ -191,7 +222,7 @@ private_lane :build_location_app do |options|
       export_method: "ad-hoc",
       export_options: {
         provisioningProfiles: {
-          "com.mewemaps.testing" => "match AdHoc com.mewemaps.testing"
+          "com.locationfinder.testing" => "match AdHoc com.locationfinder.testing"
         }
       }
     )
