@@ -70,7 +70,6 @@ jobs:
       APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-      RUNNER_TEMP: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -96,6 +95,10 @@ jobs:
       - name: Create firebase_options.dart file
         run: |
           echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
+
+      - name: Set RUNNER_TEMP variable
+        run: |
+          echo "RUNNER_TEMP=${{ runner.temp }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: flutter pub get
