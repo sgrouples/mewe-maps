@@ -113,6 +113,11 @@ jobs:
         run: |
           echo "${{ secrets.SERVICE_CREDENTIALS_MASTER_B64 }}" | base64 --decode > ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
 
+      - name: Install gems
+        run: |
+          cd ./ios
+          bundle install
+
       - name: Generate provisioning
         run: |
           cd ./ios
