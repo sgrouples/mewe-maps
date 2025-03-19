@@ -113,32 +113,25 @@ jobs:
         run: |
           echo "${{ secrets.SERVICE_CREDENTIALS_MASTER_B64 }}" | base64 --decode > ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
 
-      - name: Add SSH key for match
-        env:
-          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
-        run: |
-          eval "$(ssh-agent -s)"
-          ssh-add - <<< "${MATCH_DEPLOY_KEY}"
-
-      - name: Add GitHub to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Debug SSH key for match
-        env:
-          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
-        run: |
-          ssh-add -l
-          ssh -vT git@github.com
-
       - name: Install gems
         run: |
           cd ./ios
           bundle install
 
       - name: Generate provisioning
+        env:
+          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
         run: |
+          mkdir -p ~/.ssh
+          echo "$MATCH_DEPLOY_KEY" > ~/.ssh/match_deploy_key
+          chmod 600 ~/.ssh/match_deploy_key
+          echo "Host github.com
+            HostName github.com
+            IdentityFile ~/.ssh/match_deploy_key
+            StrictHostKeyChecking no" > ~/.ssh/config
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/match_deploy_key
+
           cd ./ios
           bundle exec fastlane generate_provisioning
 
