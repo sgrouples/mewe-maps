@@ -133,18 +133,28 @@ jobs:
         run: flutter pub run build_runner build
 
       - name: Build Flutter
-        run: flutter build ios --no-codesign
-
-      - name: Build app
         env:
           SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
         run: |
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" ~/Library/Keychains/tmp-db
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ~/Library/Keychains/tmp-db
-          security find-identity -v -p codesigning ~/Library/Keychains/tmp-db
-
           cd ./ios
-          bundle exec fastlane build scheme:Runner
+          BUILD_NUMBER=$(bundle exec fastlane get_version | tail -n 1)
+
+          cd ..
+          flutter build ipa \
+            --export-options-plist=ios/ExportOptions.plist \
+            --release \
+            --build-number=$BUILD_NUMBER
+
+#      - name: Build app
+#        env:
+#          SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+#        run: |
+#          security unlock-keychain -p "$KEYCHAIN_PASSWORD" ~/Library/Keychains/tmp-db
+#          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ~/Library/Keychains/tmp-db
+#          security find-identity -v -p codesigning ~/Library/Keychains/tmp-db
+#
+#          cd ./ios
+#          bundle exec fastlane build scheme:Runner
 
       - name: Deploy to App Distribution
         env:

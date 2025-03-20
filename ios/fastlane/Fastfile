@@ -84,12 +84,23 @@ lane :build do |options|
   )
 end
 
+lane :get_version do
+  latest_release = firebase_app_distribution_get_latest_release(
+    app: get_firebase_app_id(),
+    service_credentials_file: get_service_credentials_file()
+  )
+
+  build_number = (latest_release&.dig(:buildVersion) || 0).to_i + 1
+
+  build_number
+end
+
 lane :upload do |options|
   scheme = options[:scheme] || "Runner"
 
   firebase_app_distribution(
     app: get_firebase_app_id(),
-    ipa_path: "./#{scheme}.ipa",
+    ipa_path: "./ipa/#{scheme}.ipa",
     groups: "ios-internal-testers",
     release_notes: get_changelog(),
     service_credentials_file: get_service_credentials_file()
