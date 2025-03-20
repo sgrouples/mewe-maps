@@ -47,24 +47,44 @@ lane :generate_provisioning do
   sync_match_development()
 end
 
-desc """
-    Builds app target.
+#desc """
+#    Builds app target.
+#
+#    ##Options:
+#
+#    * display_name - will set the .plist display name.
+#    * build_number - will set the .plist build number.
+#    * scheme - scheme to build, default 'Consumer'
+#    * configuration - scheme build configuration, default 'AdHoc'
+#    * commitMessageKey - key required for the lane to execute
+#
+#    ##Example: usage:
+#
+#      bundle exec fastlane build scheme:\"Runner\" build_number:\"1.0.4\"
+#    """
+#lane :build do |options|
+#  skip_docs
+#
+#  latest_release = firebase_app_distribution_get_latest_release(
+#    app: get_firebase_app_id(),
+#    service_credentials_file: get_service_credentials_file()
+#  )
+#  build_number = (latest_release&.dig(:buildVersion) || 0).to_i + 1
+#
+#  puts "Build number: #{build_number}"
+#
+#  update_project(
+#    display_name: get_app_display_name(build_number: build_number),
+#    build_number: build_number
+#  )
+#
+#  build_location_app(
+#    scheme: options[:scheme],
+#    configuration: options[:configuration]
+#  )
+#end
 
-    ##Options:
-
-    * display_name - will set the .plist display name.
-    * build_number - will set the .plist build number.
-    * scheme - scheme to build, default 'Consumer'
-    * configuration - scheme build configuration, default 'AdHoc'
-    * commitMessageKey - key required for the lane to execute
-
-    ##Example: usage:
-
-      bundle exec fastlane build scheme:\"Runner\" build_number:\"1.0.4\"
-    """
-lane :build do |options|
-  skip_docs
-
+lane :set_build_number do
   latest_release = firebase_app_distribution_get_latest_release(
     app: get_firebase_app_id(),
     service_credentials_file: get_service_credentials_file()
@@ -77,30 +97,12 @@ lane :build do |options|
     display_name: get_app_display_name(build_number: build_number),
     build_number: build_number
   )
-
-  build_location_app(
-    scheme: options[:scheme],
-    configuration: options[:configuration]
-  )
 end
 
-lane :get_version do
-  latest_release = firebase_app_distribution_get_latest_release(
-    app: get_firebase_app_id(),
-    service_credentials_file: get_service_credentials_file()
-  )
-
-  build_number = (latest_release&.dig(:buildVersion) || 0).to_i + 1
-
-  build_number
-end
-
-lane :upload do |options|
-  scheme = options[:scheme] || "Runner"
-
+lane :upload do
   firebase_app_distribution(
     app: get_firebase_app_id(),
-    ipa_path: "./ipa/#{scheme}.ipa",
+    ipa_path: "../build/ios/ipa/MeWe Maps.ipa",
     groups: "ios-internal-testers",
     release_notes: get_changelog(),
     service_credentials_file: get_service_credentials_file()
@@ -211,7 +213,7 @@ end
 
 # Private build lanes
 
-private_lane :build_location_app do |options|
+#private_lane :build_location_app do |options|
   # scheme = options[:scheme] || "Runner"
   # gym(
   #   project: "Runner.xcodeproj",
@@ -227,16 +229,16 @@ private_lane :build_location_app do |options|
   #   #},
   #   xcodebuild_formatter: "xcbeautify"
   # )
-  gym(
-      export_method: "ad-hoc",
-      export_options: {
-        provisioningProfiles: {
-          "com.locationfinder.testing" => "match AdHoc com.locationfinder.testing"
-        },
-        signingKeychainPath: "~/Library/Keychains/tmp-db"
-      }
-    )
-end
+#  gym(
+#      export_method: "ad-hoc",
+#      export_options: {
+#        provisioningProfiles: {
+#          "com.locationfinder.testing" => "match AdHoc com.locationfinder.testing"
+#        },
+#        signingKeychainPath: "~/Library/Keychains/tmp-db"
+#      }
+#    )
+#end
 
 private_lane :update_project do |options|
   if options[:display_name]

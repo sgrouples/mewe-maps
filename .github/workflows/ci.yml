@@ -137,13 +137,10 @@ jobs:
           SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
         run: |
           cd ./ios
-          BUILD_NUMBER=$(bundle exec fastlane get_version | tail -n 1)
+          bundle exec fastlane set_build_number
 
           cd ..
-          flutter build ipa \
-            --export-options-plist=ios/ExportOptions.plist \
-            --release \
-            --build-number=$BUILD_NUMBER
+          flutter build ipa --export-options-plist=./ios/ExportOptions.plist --release
 
 #      - name: Build app
 #        env:
@@ -161,4 +158,4 @@ jobs:
           SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
         run: |
             cd ./ios
-            bundle exec fastlane upload scheme:Runner
+            bundle exec fastlane upload
