@@ -22,11 +22,20 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String avatarUrl = user.halLinks.getAvatarUrl();
-    return CircleAvatar(
-      backgroundImage: customImage ?? NetworkImage(avatarUrl),
-      backgroundColor: user.isMe() ? Colors.blue : null,
-      radius: radius,
-      child: (avatarUrl.isEmpty && customImage == null) ? const Icon(Icons.location_on) : null,
+    double borderWidth = radius * 0.1;
+    return Container(
+      width: radius * 2 + borderWidth * 2,
+      height: radius * 2 + borderWidth * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Theme.of(context).colorScheme.primary, width: borderWidth),
+      ),
+      child: CircleAvatar(
+        backgroundImage: customImage ?? (avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null),
+        backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.primary,
+        radius: radius,
+        child: (avatarUrl.isEmpty && customImage == null) ? const Icon(Icons.location_on) : null,
+      ),
     );
   }
 }

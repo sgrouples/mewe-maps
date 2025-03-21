@@ -19,7 +19,6 @@ class LocationTrackingIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Icon(
       isSelected ? Icons.my_location : Icons.location_searching,
-      color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
     );
   }
 }
