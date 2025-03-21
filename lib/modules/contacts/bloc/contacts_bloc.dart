@@ -32,6 +32,15 @@ part 'contacts_state.dart';
 const _TAG = 'ContactsBloc';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
+  final ContactsRepository _contactsRepository;
+  final SharingLocationRepository _sharingLocationRepository;
+  final HiddenFromMapRepository _hiddenFromMapRepository;
+
+  StreamSubscription? _contactsLocationsSubscription;
+  StreamSubscription? _myPositionSubscription;
+
+  List<User> _contacts = [];
+
   ContactsBloc(this._contactsRepository, this._sharingLocationRepository, this._hiddenFromMapRepository) : super(const ContactsState(error: "")) {
     on<StartObservingData>(_loadContacts);
     on<ReloadContacts>(_reloadContacts);
@@ -50,14 +59,12 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     });
   }
 
-  final ContactsRepository _contactsRepository;
-  final SharingLocationRepository _sharingLocationRepository;
-  final HiddenFromMapRepository _hiddenFromMapRepository;
-
-  StreamSubscription? _contactsLocationsSubscription;
-  StreamSubscription? _myPositionSubscription;
-
-  List<User> _contacts = [];
+  @override
+  void onEvent(ContactsEvent event) {
+    super.onEvent(event);
+    Logger.log(_TAG, "event ${event.toString()}");
+    Logger.log(_TAG, "state ${state.toString()}");
+  }
 
   void _loadContacts(StartObservingData event, Emitter<ContactsState> emit) async {
     try {

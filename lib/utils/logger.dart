@@ -9,6 +9,8 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 class Logger {
+  static bool LOG_DIO = false;
+
   static void log(String tag, String text) {
     final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
     pattern.allMatches(text).forEach((match) => print("LOCATION_APP: $tag: ${match.group(0)}"));

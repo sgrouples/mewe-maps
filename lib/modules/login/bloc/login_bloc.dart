@@ -16,6 +16,7 @@ import 'package:mewe_maps/repositories/authentication/authentication_repository.
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/model/challenges_response.dart';
 import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
+import 'package:mewe_maps/utils/logger.dart';
 
 part 'login_bloc.g.dart';
 part 'login_event.dart';
@@ -24,6 +25,8 @@ part 'login_state.dart';
 const _TAG = 'LoginBloc';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
+  final AuthenticationRepository _authenticationRepository;
+
   LoginBloc(this._authenticationRepository)
       : super(const LoginState(emailOrPhoneNumber: "", password: "", error: "", isLoading: false, user: null, challenge: null)) {
     on<EmailOrPhoneNumberChanged>(_emailOrPhoneNumberChanged);
@@ -32,7 +35,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<ChallengeSubmitted>(_challengeSubmitted);
   }
 
-  final AuthenticationRepository _authenticationRepository;
+  @override
+  void onEvent(LoginEvent event) {
+    super.onEvent(event);
+    Logger.log(_TAG, "event ${event.toString()}");
+    Logger.log(_TAG, "state ${state.toString()}");
+  }
 
   void _emailOrPhoneNumberChanged(EmailOrPhoneNumberChanged event, Emitter<LoginState> emit) {
     emit(state.copyWith(emailOrPhoneNumber: event.emailOrPhoneNumber));
