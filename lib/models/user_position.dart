@@ -8,17 +8,21 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mewe_maps/models/user.dart';
 
-class UserPosition {
+class UserPosition extends Equatable {
   final User user;
   final Position position;
   final DateTime timestamp;
   final DateTime? shareUntil;
 
-  UserPosition({required this.user, required this.position, required this.timestamp, this.shareUntil});
+  const UserPosition({required this.user, required this.position, required this.timestamp, this.shareUntil});
+
+  @override
+  List<Object?> get props => [user, position, timestamp, shareUntil];
 
   GeoPoint get geoPoint => GeoPoint(latitude: position.latitude, longitude: position.longitude);
 }

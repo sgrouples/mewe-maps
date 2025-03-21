@@ -24,6 +24,7 @@ import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
 import 'package:mewe_maps/services/permissions/permissions.dart';
+import 'package:mewe_maps/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -62,6 +63,13 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<NextUserClicked>(_nextUserClicked);
     on<TrackMyPositionClicked>(_trackMyPositionClicked);
     on<TrackSelectedUserClicked>(_trackSelectedUserClicked);
+  }
+
+  @override
+  void onEvent(MapEvent event) {
+    super.onEvent(event);
+    Logger.log(_TAG, "event ${event.toString()}");
+    Logger.log(_TAG, "state ${state.toString()}");
   }
 
   void _init(InitEvent event, Emitter<MapState> emit) async {
@@ -129,7 +137,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _updateContactsPositions(UpdateContactsLocation event, Emitter<MapState> emit) async {
-    if (state.selectedUser != null) {
+    if (state.selectedUser != null && state.selectedUser?.user.isMe() == false) {
       final selectedUser = event.positions.firstOrNullWhere((element) => element.user.userId == state.selectedUser!.user.userId);
       emit(state.copyWith(selectedUser: selectedUser));
     }
