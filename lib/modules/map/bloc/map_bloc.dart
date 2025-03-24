@@ -9,6 +9,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -16,6 +17,7 @@ import 'package:dartx/dartx.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mewe_maps/models/firestore/location_request.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/models/user_position.dart';
 import 'package:mewe_maps/repositories/fcm/firebase_cloud_messaging_repository.dart';
@@ -45,6 +47,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   StreamSubscription? _myPositionSubscription;
   StreamSubscription? _contactsLocationsSubscription;
+  StreamSubscription? _locationRequestsSubscription;
 
   MapBloc(
     this._myLocationRepository,
@@ -72,6 +75,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<NextUserClicked>(_nextUserClicked);
     on<TrackMyPositionClicked>(_trackMyPositionClicked);
     on<TrackSelectedUserClicked>(_trackSelectedUserClicked);
+    on<UpdateLocationRequests>(_updateLocationRequests);
+    on<RespondForLocationRequest>(_respondForLocationRequest);
   }
 
   @override
@@ -84,6 +89,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   void _init(InitEvent event, Emitter<MapState> emit) async {
     _observeContactsPosition();
     _observeMyPosition();
+    _observeLocationRequests();
     _startObservingFcmToken();
     emit(state.copyWith(mapInitialized: true));
   }
@@ -97,6 +103,12 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         add(UpdateMyPosition(up));
       });
     }
+  }
+
+  void _observeLocationRequests() {
+    _locationRequestsSubscription = _sharingLocationRepository.observeOtherUsersLocationRequests(StorageRepository.user!.userId).listen((requests) {
+      add(UpdateLocationRequests(requests));
+    });
   }
 
   void _stopObservingMyPosition() async {
@@ -152,6 +164,20 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       emit(state.copyWith(selectedUser: selectedUser));
     }
     emit(state.copyWith(contactsPositions: event.positions));
+  }
+
+  void _updateLocationRequests(UpdateLocationRequests event, Emitter<MapState> emit) async {
+    final locationRequests = event.locationRequests.map((request) => MapEntry(request, User.fromJson(jsonDecode(request.requestingUserData)))).toList();
+    emit(state.copyWith(locationRequests: Map.fromEntries(locationRequests)));
+  }
+
+  void _respondForLocationRequest(RespondForLocationRequest event, Emitter<MapState> emit) async {
+    if (event.minutesToShare != null && event.minutesToShare! > 0) {
+      _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!, true);
+      _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
+    } else {
+      _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
+    }
   }
 
   void _openMeWeClicked(OpenMeWeClicked event, Emitter<MapState> emit) async {

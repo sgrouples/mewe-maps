@@ -50,6 +50,9 @@ abstract class SharingLocationRepository {
   // Cancel the location request.
   Future<void> cancelRequestForLocation(String requestingUserId, String contactUserId);
 
+  // Cancel the location request.
+  Future<void> cancelRequestForLocationById(String requestId);
+
   // Observe location requests from other users.
   Stream<List<LocationRequest>> observeOtherUsersLocationRequests(String userId);
 
@@ -189,6 +192,11 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
   @override
   Future<void> cancelRequestForLocation(String requestingUserId, String recipientUserId) async {
     await _cleanUpOldRequestsForUser(requestingUserId, recipientUserId);
+  }
+
+  @override
+  Future<void> cancelRequestForLocationById(String requestId) async {
+    await _firestore.collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS).doc(requestId).delete();
   }
 
   @override

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mewe_maps/models/user.dart';
+import 'package:mewe_maps/modules/common/view/components/interval_dialog.dart';
 import 'package:mewe_maps/modules/contacts/bloc/contacts_bloc.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 
@@ -107,47 +108,3 @@ class ContactsMySharingLocationTab extends StatelessWidget {
     );
   }
 }
-
-Future<int?> showIntervalModal(BuildContext context, User contact) async {
-  return await showModalBottomSheet(
-    context: context,
-    builder: (context) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            title: const Text('Share for 5 minutes'),
-            onTap: () {
-              Navigator.of(context).pop(5);
-            },
-          ),
-          ListTile(
-            title: const Text('Share for 15 minutes'),
-            onTap: () {
-              Navigator.of(context).pop(15);
-            },
-          ),
-          ListTile(
-            title: const Text('Share for 1 hour'),
-            onTap: () {
-              Navigator.of(context).pop(60);
-            },
-          ),
-          ListTile(
-            title: const Text('Share for 3 hours'),
-            onTap: () {
-              Navigator.of(context).pop(180);
-            },
-          ),
-          ListTile(
-            title: const Text('Share until I stop'),
-            onTap: () {
-              Navigator.of(context).pop(TIME_INTERVAL_FOREVER);
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-

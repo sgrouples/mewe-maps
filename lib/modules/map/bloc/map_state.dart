@@ -19,6 +19,7 @@ class MapState extends Equatable {
     this.myPosition,
     this.contactsPositions = const [],
     this.trackingState = TrackingState.notTracking,
+    this.locationRequests = const {},
   });
 
   final bool mapInitialized;
@@ -28,9 +29,10 @@ class MapState extends Equatable {
   final UserPosition? myPosition;
   final List<UserPosition> contactsPositions;
   final TrackingState trackingState;
+  final Map<LocationRequest, User> locationRequests;
 
   @override
-  List<Object?> get props => [mapInitialized, showPermissionsRationale, selectedUser, myPosition, contactsPositions, trackingState];
+  List<Object?> get props => [mapInitialized, showPermissionsRationale, selectedUser, myPosition, contactsPositions, trackingState, locationRequests];
 }
 
 enum TrackingState {
