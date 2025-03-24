@@ -213,6 +213,9 @@ class ContactsPage extends StatelessWidget {
                                       context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
                                     },
                                   ),
+                                  onTapped: () {
+                                    Navigator.of(context).pop(sharingData.contact);
+                                  },
                                 );
                               } else {
                                 final contact = filteredContacts![index - (filteredShareMyPositionData?.length ?? 0)];
@@ -227,6 +230,9 @@ class ContactsPage extends StatelessWidget {
                                     },
                                     icon: const Icon(Icons.add),
                                   ),
+                                  onTapped: () {
+                                    Navigator.of(context).pop(contact);
+                                  },
                                 );
                               }
                             },
@@ -319,7 +325,7 @@ class ContactsPage extends StatelessWidget {
                     ),
                   ],
                 )
-              : state.contactLocationData!.isEmpty
+              : allContacts.isEmpty
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: const [

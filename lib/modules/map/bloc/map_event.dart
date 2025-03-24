@@ -19,12 +19,12 @@ class InitEvent extends MapEvent {
 
 class ObserveMyPosition extends MapEvent {
   @override
-  List<Object?> get props => ['OnResume'];
+  List<Object?> get props => ['ObserveMyPosition'];
 }
 
 class StopObservingMyPosition extends MapEvent {
   @override
-  List<Object?> get props => ['OnPause'];
+  List<Object?> get props => ['StopObservingMyPosition'];
 }
 
 class ShowPermissionsRationale extends MapEvent {
@@ -43,9 +43,7 @@ class UpdateMyPosition extends MapEvent {
   UpdateMyPosition(this.position);
 
   @override
-  List<Object?> get props => [
-        [position]
-      ];
+  List<Object?> get props => [position];
 }
 
 class UpdateContactsLocation extends MapEvent {
@@ -95,25 +93,25 @@ class UserSelectedFromContacts extends MapEvent {
 
 class TrackMyPositionClicked extends MapEvent {
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => ['TrackMyPositionClicked'];
 }
 
 class TrackSelectedUserClicked extends MapEvent {
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => ['TrackSelectedUserClicked'];
 }
 
 class CloseSelectedUser extends MapEvent {
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => ['CloseSelectedUser'];
 }
 
 class PreviousUserClicked extends MapEvent {
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => ['PreviousUserClicked'];
 }
 
 class NextUserClicked extends MapEvent {
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => ['NextUserClicked'];
 }

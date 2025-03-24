@@ -32,7 +32,9 @@ class AuthInterceptor extends Interceptor {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (o) => Logger.log("LogInterceptor", o.toString()),
+        logPrint: (o) => {
+          if (Logger.LOG_DIO) {Logger.log("LogInterceptor", o.toString())}
+        },
       ),
     ]);
   }

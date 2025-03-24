@@ -8,26 +8,30 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'cdn_access_params.g.dart';
 
 @JsonSerializable()
-class CdnAccessParams {
+class CdnAccessParams extends Equatable {
   @JsonKey(name: 'CloudFront-Key-Pair-Id')
-  String? cloudFrontKeyPairId;
+  final String? cloudFrontKeyPairId;
 
   @JsonKey(name: 'CloudFront-Signature')
-  String? cloudFrontSignature;
+  final String? cloudFrontSignature;
 
   @JsonKey(name: 'CloudFront-Policy')
-  String? cloudFrontPolicy;
+  final String? cloudFrontPolicy;
 
-  CdnAccessParams({
+  const CdnAccessParams({
     this.cloudFrontKeyPairId,
     this.cloudFrontSignature,
     this.cloudFrontPolicy,
   });
+
+  @override
+  List<Object?> get props => [cloudFrontKeyPairId, cloudFrontSignature, cloudFrontPolicy];
 
   String buildCdnCookie() {
     return 'CloudFront-Policy=$cloudFrontPolicy; CloudFront-Signature=$cloudFrontSignature; CloudFront-Key-Pair-Id=$cloudFrontKeyPairId;';
