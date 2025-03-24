@@ -159,7 +159,6 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
         _sharingLocationRepository.observeMyLocationRequests(StorageRepository.user!.userId).startWith([]),
         (contactsSharingData, hiddenUsers, contacts, searchQuery, myLocationRequests) =>
             (contactsSharingData, hiddenUsers, contacts, searchQuery, myLocationRequests)).listen((data) {
-
       final contactLocationData = data.$1.filter((entry) {
         return entry.contact.name.toLowerCase().contains(data.$4.toLowerCase());
       }).map((sharingData) {

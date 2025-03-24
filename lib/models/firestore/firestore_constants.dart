@@ -9,10 +9,8 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 class FirestoreConstants {
-
   static const String COLLECTION_SHARING_SESSIONS = "sharing_sessions";
   static const String COLLECTION_SHARING_DATA = "shared_data";
   static const String COLLECTION_USERS_PRIVATE_DATA = "users_private_data";
   static const String COLLECTION_LOCATION_REQUESTS = "location_requests";
-
 }

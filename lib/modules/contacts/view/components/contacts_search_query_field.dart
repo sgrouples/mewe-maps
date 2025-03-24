@@ -14,7 +14,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/contacts_bloc.dart';
 
 class ContactsSearchQueryField extends StatefulWidget {
-
   const ContactsSearchQueryField({super.key});
 
   @override
@@ -22,7 +21,6 @@ class ContactsSearchQueryField extends StatefulWidget {
 }
 
 class _ContactsSearchQueryFieldState extends State<ContactsSearchQueryField> {
-
   final _controller = TextEditingController();
 
   @override

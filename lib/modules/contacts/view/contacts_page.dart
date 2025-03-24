@@ -46,88 +46,86 @@ class ContactsPage extends StatelessWidget {
         ),
         child: DefaultTabController(
           length: 2,
-          child: Builder(
-            builder: (context) {
-              final controller = DefaultTabController.of(context);
-              controller.addListener((){
-                if (!controller.indexIsChanging) {
-                  context.read<ContactsBloc>().add(SearchQueryChanged(""));
-                }
-              });
+          child: Builder(builder: (context) {
+            final controller = DefaultTabController.of(context);
+            controller.addListener(() {
+              if (!controller.indexIsChanging) {
+                context.read<ContactsBloc>().add(SearchQueryChanged(""));
+              }
+            });
 
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 100,
-                    child: AppBar(
-                        title: const Text('Contacts'),
-                        bottom: const TabBar(
-                          dividerColor: Colors.transparent,
-                          tabs: [
-                            Tab(text: 'Share My Location'),
-                            Tab(text: 'Shared With Me'),
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 100,
+                  child: AppBar(
+                      title: const Text('Contacts'),
+                      bottom: const TabBar(
+                        dividerColor: Colors.transparent,
+                        tabs: [
+                          Tab(text: 'Share My Location'),
+                          Tab(text: 'Shared With Me'),
+                        ],
+                      ),
+                      actions: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(StorageRepository.user);
+                              },
+                              icon: UserAvatar(
+                                user: StorageRepository.user!,
+                                radius: 15,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext dialogContext) {
+                                    return AlertDialog(
+                                      insetPadding: EdgeInsets.zero,
+                                      title: const Text("Logout"),
+                                      content: const Text("Are you sure?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            context.read<ContactsBloc>().add(LogOutClicked(context));
+                                          },
+                                          child: const Text('Yes, log me out'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('No'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: const Text('LOGOUT'),
+                            ),
+                            const SizedBox(width: 12),
                           ],
                         ),
-                        actions: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop(StorageRepository.user);
-                                },
-                                icon: UserAvatar(
-                                  user: StorageRepository.user!,
-                                  radius: 15,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext dialogContext) {
-                                      return AlertDialog(
-                                        insetPadding: EdgeInsets.zero,
-                                        title: const Text("Logout"),
-                                        content: const Text("Are you sure?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              context.read<ContactsBloc>().add(LogOutClicked(context));
-                                            },
-                                            child: const Text('Yes, log me out'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: const Text('No'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                                child: const Text('LOGOUT'),
-                              ),
-                              const SizedBox(width: 12),
-                            ],
-                          ),
-                        ]),
+                      ]),
+                ),
+                const Expanded(
+                  child: TabBarView(
+                    children: [
+                      ContactsMySharingLocationTab(),
+                      ContactsSharedWithMeTab(),
+                    ],
                   ),
-                  const Expanded(
-                    child: TabBarView(
-                      children: [
-                        ContactsMySharingLocationTab(),
-                        ContactsSharedWithMeTab(),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }
-          ),
+                ),
+              ],
+            );
+          }),
         ),
       ),
     );

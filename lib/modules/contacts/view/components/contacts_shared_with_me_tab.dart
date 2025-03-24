@@ -23,7 +23,7 @@ class ContactsSharedWithMeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
-      previous.contactLocationData != current.contactLocationData ||
+          previous.contactLocationData != current.contactLocationData ||
           previous.error != current.error ||
           previous.contactsToRequestLocation != current.contactsToRequestLocation,
       builder: (context, state) {
@@ -40,68 +40,67 @@ class ContactsSharedWithMeTab extends StatelessWidget {
           },
           child: state.error.isNotEmpty
               ? ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    state.error,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-              ),
-            ],
-          )
-              : Column(
-            children: [
-              const ContactsSearchQueryField(),
-              if (contactsToAskForLocation.isEmpty && filteredContactsLocations.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Empty'),
-                  ),
-                ),
-              Expanded(
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: filteredContactsLocations.length + contactsToAskForLocation.length,
-                    itemBuilder: (context, index) {
-                      final isContactLocation = index < filteredContactsLocations.length;
-                      final contact =
-                      isContactLocation ? filteredContactsLocations[index] : contactsToAskForLocation[index - filteredContactsLocations.length];
-                      return isContactLocation
-                          ? ContactListItem(
-                        user: contact,
-                        onTapped: () {
-                          Navigator.of(context).pop(contact);
-                        },
-                        trailing: ContactSwitch(
-                          value: state.contactLocationData![contact]!,
-                          switchText: "Display on Map",
-                          onChanged: (newValue) {
-                            context.read<ContactsBloc>().add(DisplayOnTheMapChanged(contact, newValue));
-                          },
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          state.error,
+                          style: const TextStyle(color: Colors.red),
                         ),
-                      )
-                          : ContactListItem(
-                        user: contact,
-                        label: (state.contactsToRequestLocation![contact] ?? false) ? "Requested" : null,
-                        trailing: state.contactsToRequestLocation![contact]!
-                            ? buildCancelRequestLocationButton(context, contact)
-                            : buildRequestLocationButton(context, contact),
-                      );
-                    },
-                  ))
-            ],
-          ),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    const ContactsSearchQueryField(),
+                    if (contactsToAskForLocation.isEmpty && filteredContactsLocations.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text('Empty'),
+                        ),
+                      ),
+                    Expanded(
+                        child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: filteredContactsLocations.length + contactsToAskForLocation.length,
+                      itemBuilder: (context, index) {
+                        final isContactLocation = index < filteredContactsLocations.length;
+                        final contact =
+                            isContactLocation ? filteredContactsLocations[index] : contactsToAskForLocation[index - filteredContactsLocations.length];
+                        return isContactLocation
+                            ? ContactListItem(
+                                user: contact,
+                                onTapped: () {
+                                  Navigator.of(context).pop(contact);
+                                },
+                                trailing: ContactSwitch(
+                                  value: state.contactLocationData![contact]!,
+                                  switchText: "Display on Map",
+                                  onChanged: (newValue) {
+                                    context.read<ContactsBloc>().add(DisplayOnTheMapChanged(contact, newValue));
+                                  },
+                                ),
+                              )
+                            : ContactListItem(
+                                user: contact,
+                                label: (state.contactsToRequestLocation![contact] ?? false) ? "Requested" : null,
+                                trailing: state.contactsToRequestLocation![contact]!
+                                    ? buildCancelRequestLocationButton(context, contact)
+                                    : buildRequestLocationButton(context, contact),
+                              );
+                      },
+                    ))
+                  ],
+                ),
         );
       },
     );
   }
 }
-
 
 IconButton buildRequestLocationButton(BuildContext context, User contact) {
   return IconButton(
@@ -134,7 +133,6 @@ IconButton buildRequestLocationButton(BuildContext context, User contact) {
     },
   );
 }
-
 
 IconButton buildCancelRequestLocationButton(BuildContext context, User contact) {
   return IconButton(

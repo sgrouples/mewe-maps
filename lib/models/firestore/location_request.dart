@@ -17,7 +17,6 @@ part 'location_request.g.dart';
 
 @JsonSerializable()
 class LocationRequest extends Equatable {
-
   @JsonKey(includeToJson: false)
   final String? id;
 
@@ -42,5 +41,4 @@ class LocationRequest extends Equatable {
   factory LocationRequest.fromJson(String id, Map<String, dynamic> json) => _$LocationRequestFromJson(json..addAll({"id": id}));
 
   Map<String, dynamic> toJson() => _$LocationRequestToJson(this);
-
 }

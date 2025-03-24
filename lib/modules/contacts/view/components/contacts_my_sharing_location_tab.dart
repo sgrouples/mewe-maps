@@ -11,10 +11,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/modules/common/view/components/interval_dialog.dart';
 import 'package:mewe_maps/modules/contacts/bloc/contacts_bloc.dart';
-import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 
 import 'contact_list_item.dart';
 import 'contacts_search_query_field.dart';
@@ -26,7 +24,7 @@ class ContactsMySharingLocationTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ContactsBloc, ContactsState>(
       buildWhen: (previous, current) =>
-      previous.shareMyPositionData != current.shareMyPositionData ||
+          previous.shareMyPositionData != current.shareMyPositionData ||
           previous.contactsToShareWith != current.contactsToShareWith ||
           previous.error != current.error,
       builder: (context, state) {
@@ -43,66 +41,66 @@ class ContactsMySharingLocationTab extends StatelessWidget {
           },
           child: state.error.isNotEmpty
               ? ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    state.error,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-              ),
-            ],
-          ) : Column(
-            children: [
-              const ContactsSearchQueryField(),
-              if (contactsToShareWith.isEmpty && shareMyPositionData.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Empty'),
-                  ),
-                ),
-              Expanded(
-                child: ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: shareMyPositionData.length + contactsToShareWith.length,
-                  itemBuilder: (context, index) {
-                    if (index < shareMyPositionData.length) {
-                      final sharingData = shareMyPositionData[index];
-                      return ContactListItem(
-                        user: sharingData.contact,
-                        trailing: ContactSwitch(
-                          value: true,
-                          switchText:
-                          sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
-                          onChanged: (newValue) {
-                            context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
-                          },
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          state.error,
+                          style: const TextStyle(color: Colors.red),
                         ),
-                      );
-                    } else {
-                      final contact = contactsToShareWith[index - shareMyPositionData.length];
-                      return ContactListItem(
-                        user: contact,
-                        trailing: IconButton(
-                          onPressed: () async {
-                            final minutes = await showIntervalModal(context, contact);
-                            if (context.mounted && minutes != null) {
-                              context.read<ContactsBloc>().add(ShareMyPositionStarted(contact, minutes));
-                            }
-                          },
-                          icon: const Icon(Icons.add),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    const ContactsSearchQueryField(),
+                    if (contactsToShareWith.isEmpty && shareMyPositionData.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text('Empty'),
                         ),
-                      );
-                    }
-                  },
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: shareMyPositionData.length + contactsToShareWith.length,
+                        itemBuilder: (context, index) {
+                          if (index < shareMyPositionData.length) {
+                            final sharingData = shareMyPositionData[index];
+                            return ContactListItem(
+                              user: sharingData.contact,
+                              trailing: ContactSwitch(
+                                value: true,
+                                switchText: sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
+                                onChanged: (newValue) {
+                                  context.read<ContactsBloc>().add(ShareMyPositionStopped(sharingData.sharingSessionId));
+                                },
+                              ),
+                            );
+                          } else {
+                            final contact = contactsToShareWith[index - shareMyPositionData.length];
+                            return ContactListItem(
+                              user: contact,
+                              trailing: IconButton(
+                                onPressed: () async {
+                                  final minutes = await showIntervalModal(context, contact);
+                                  if (context.mounted && minutes != null) {
+                                    context.read<ContactsBloc>().add(ShareMyPositionStarted(contact, minutes));
+                                  }
+                                },
+                                icon: const Icon(Icons.add),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         );
       },
     );
