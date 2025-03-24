@@ -38,7 +38,7 @@ void backgroundLocationTrackerCallback() async {
   await initializeIsolate();
 
   blt.BackgroundLocationTrackerManager.handleBackgroundUpdated((data) async {
-    if (!await shareMyLocationWithSessions(true) && !await AppLifecycleTracker.isAppVisible()) {
+    if (!await shareMyLocationWithSessions() && !await AppLifecycleTracker.isAppVisible()) {
       Logger.log(_TAG, "stopTracking in backgroundLocationTrackerCallback");
       blt.BackgroundLocationTrackerManager.stopTracking();
     }

@@ -25,7 +25,7 @@ abstract class SharingLocationRepository {
   // Start sharing my position with the given user ids.
   // Time interval is in minutes.
   // sharingUser - data of the user who wants to share the location.
-  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes, bool isPrecise);
+  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes);
 
   // Stop sharing my position with the given session id.
   Future<void> stopSharingSession(String sessionId);
@@ -113,7 +113,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes, bool isPrecise) async {
+  Future<void> startSharingSession(User sharingUser, User recipientUser, int shareMinutes) async {
     await _deleteOldSessionForUsers(sharingUser, recipientUser);
 
     return await _firestore.collection(SHARING_SESSION_COLLECTION).add({
@@ -122,7 +122,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
       'recipient_user_data': jsonEncode(recipientUser.toJson()),
       'owner_user_data': jsonEncode(sharingUser.toJson()),
       'share_until': shareMinutes == TIME_INTERVAL_FOREVER ? MAX_SHARE_UNTIL : DateTime.now().add(Duration(minutes: shareMinutes)),
-      'is_precise': isPrecise,
+      'is_precise': true,
     }).then((value) {
       Logger.log(_TAG, 'Sharing session started with id: ${value.id}');
     });

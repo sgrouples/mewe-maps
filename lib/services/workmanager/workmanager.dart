@@ -24,7 +24,7 @@ void workmanagerCallback() async {
     Logger.log(_TAG, "executeTask $task");
 
     if (task == _NOT_PRECISE_BACKGROUND_SHARING_TASK) {
-      await shareMyLocationWithSessions(false);
+      await shareMyLocationWithSessions();
     }
 
     return Future.value(true);

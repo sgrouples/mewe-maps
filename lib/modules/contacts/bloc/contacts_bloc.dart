@@ -22,6 +22,7 @@ import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
+import 'package:mewe_maps/services/location/location_sharing.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -148,7 +149,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _startSharingPosition(ShareMyPositionStarted event, Emitter<ContactsState> emit) async {
     try {
-      await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.contact, event.minutes, true);
+      await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.contact, event.minutes);
+      await shareMyLocationWithSessions();
       _refreshSharingSessions();
     } catch (error) {
       Logger.log(_TAG, "Failed to share position. ${error.toString()}");
@@ -179,8 +181,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   @override
   Future<void> close() async {
-    _contactsLocationsSubscription?.cancel();
-    _myPositionSubscription?.cancel();
+    await _contactsLocationsSubscription?.cancel();
+    await _myPositionSubscription?.cancel();
     return super.close();
   }
 }
