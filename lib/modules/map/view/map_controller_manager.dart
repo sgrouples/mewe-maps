@@ -19,9 +19,18 @@ import 'package:mewe_maps/services/http/image_downloader.dart';
 import 'package:synchronized/synchronized.dart';
 
 class MapControllerManager {
-  final mapController = MapController(
-    initMapWithUserPosition: const UserTrackingOption(enableTracking: false),
-  );
+  final mapController = MapController.customLayer(
+      initMapWithUserPosition: const UserTrackingOption(enableTracking: false),
+      customTile: CustomTile(
+        sourceName: "mewemapstile",
+        tileExtension: ".png",
+        urlsServers: [
+          TileURLs(
+            url: "https://maps-cdn1.amsos.cz/styles/positron/{z}/{x}/{y}",
+            subdomains: ['a', 'b', 'c'],
+          )
+        ],
+      ));
 
   final VoidCallback? onMapSingleTap;
   final Function(UserPosition)? onUserTap;
@@ -34,7 +43,7 @@ class MapControllerManager {
     });
   }
 
-  UserPosition? myPosition;
+  UserPosition? _myPosition;
   final List<UserPosition> _contactsPositions = [];
   UserPosition? _trackedUser;
 
@@ -72,7 +81,7 @@ class MapControllerManager {
 
   void setMyPosition(UserPosition? newPosition) {
     _lock.synchronized(() async {
-      UserPosition? currentPosition = myPosition;
+      UserPosition? currentPosition = _myPosition;
 
       if (currentPosition != null && newPosition == null) {
         await mapController.removeMarker(currentPosition.geoPoint);
@@ -83,9 +92,9 @@ class MapControllerManager {
       } else if (currentPosition != null && newPosition != null && currentPosition.geoPoint != newPosition.geoPoint) {
         await mapController.changeLocationMarker(oldLocation: currentPosition.geoPoint, newLocation: newPosition.geoPoint);
       }
-      myPosition = newPosition;
-      if (_trackedUser != null && _trackedUser?.user.userId == myPosition?.user.userId) {
-        mapController.moveTo(myPosition!.geoPoint, animate: true);
+      _myPosition = newPosition;
+      if (_trackedUser != null && _trackedUser?.user.userId == _myPosition?.user.userId) {
+        mapController.moveTo(_myPosition!.geoPoint, animate: true);
       }
     });
   }
@@ -94,6 +103,8 @@ class MapControllerManager {
     final tappedUser = _contactsPositions.firstOrNullWhere((it) => it.geoPoint == geoPoint);
     if (tappedUser != null) {
       onUserTap?.call(tappedUser);
+    } else if (_myPosition?.geoPoint == geoPoint) {
+      onUserTap?.call(_myPosition!);
     } else {
       onMapSingleTap?.call();
     }

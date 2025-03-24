@@ -14,7 +14,7 @@ abstract class ContactsEvent extends Equatable {}
 
 class StartObservingData extends ContactsEvent {
   @override
-  List<Object?> get props => ['LoadContacts'];
+  List<Object?> get props => ['StartObservingData'];
 }
 
 class ShareMyPositionStarted extends ContactsEvent {

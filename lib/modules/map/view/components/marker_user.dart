@@ -35,6 +35,7 @@ class MarkerUser extends StatelessWidget {
           user.isMe() ? "${user.name} (You)" : user.name,
           style: const TextStyle(
             fontSize: 12.0,
+            color: Colors.black,
           ),
         ),
       ],

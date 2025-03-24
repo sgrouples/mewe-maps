@@ -57,6 +57,13 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
   final BehaviorSubject<List<User>> _contactsSubject = BehaviorSubject.seeded([]);
   final BehaviorSubject<String> _contactsSearchQuerySubject = BehaviorSubject.seeded("");
 
+  @override
+  void onEvent(ContactsEvent event) {
+    super.onEvent(event);
+    Logger.log(_TAG, "event ${event.toString()}");
+    Logger.log(_TAG, "state ${state.toString()}");
+  }
+
   void _startObservingData(StartObservingData event, Emitter<ContactsState> emit) async {
     try {
       _contactsSubject.value = await _contactsRepository.getContacts();

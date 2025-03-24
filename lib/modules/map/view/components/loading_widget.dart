@@ -23,10 +23,13 @@ class LoadingWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/icon/app_icon.png',
-              width: 100,
-              height: 100,
+            ClipOval(
+              child: Image.asset(
+                'assets/icon/app_icon.png',
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(height: 32),
             Text(text),

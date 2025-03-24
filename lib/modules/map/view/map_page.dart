@@ -233,7 +233,6 @@ class MapPageState extends State<MapPage> {
               onPressed: () {
                 context.read<MapBloc>().add(TrackMyPositionClicked());
               },
-              backgroundColor: Colors.white,
               child: LocationTrackingIcon(state.trackingState == TrackingState.myPosition),
             ),
           );
