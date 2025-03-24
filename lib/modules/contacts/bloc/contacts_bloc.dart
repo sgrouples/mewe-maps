@@ -136,7 +136,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _askForLocationClicked(AskForLocationClicked event, Emitter<ContactsState> emit) async {
     try {
-      await _sharingLocationRepository.requestLocationFromContact(StorageRepository.user!.userId, event.user.userId);
+      await _sharingLocationRepository.requestLocationFromContact(StorageRepository.user!, event.user.userId);
     } catch (error) {
       Logger.log(_TAG, "Failed to ask for location. ${error.toString()}");
     }

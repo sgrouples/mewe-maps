@@ -45,7 +45,7 @@ abstract class SharingLocationRepository {
   Stream<List<ContactSharingData>> observeContactsSharingData(String userId);
 
   // Request location from the contact.
-  Future<void> requestLocationFromContact(String requestingUserId, String contactUserId);
+  Future<void> requestLocationFromContact(User requestingUser, String contactUserId);
 
   // Cancel the location request.
   Future<void> cancelRequestForLocation(String requestingUserId, String contactUserId);
@@ -176,11 +176,14 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
   }
 
   @override
-  Future<void> requestLocationFromContact(String requestingUserId, String requestedUserId) async {
-    await _cleanUpOldRequestsForUser(requestingUserId, requestedUserId);
-    await _firestore
-        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
-        .add(LocationRequest(requestingUserId: requestingUserId, requestedUserId: requestedUserId, requestedAt: DateTime.now()).toJson());
+  Future<void> requestLocationFromContact(User requestingUser, String requestedUserId) async {
+    await _cleanUpOldRequestsForUser(requestingUser.userId, requestedUserId);
+    await _firestore.collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS).add(LocationRequest(
+            requestingUserId: requestingUser.userId,
+            requestingUserData: jsonEncode(requestingUser.toJson()),
+            requestedUserId: requestedUserId,
+            requestedAt: DateTime.now())
+        .toJson());
   }
 
   @override
@@ -190,22 +193,14 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
 
   @override
   Stream<List<LocationRequest>> observeOtherUsersLocationRequests(String userId) {
-    return _firestore
-        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
-        .where('requested_user_id', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) {
+    return _firestore.collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS).where('requested_user_id', isEqualTo: userId).snapshots().map((snapshot) {
       return snapshot.docs.map((e) => LocationRequest.fromJson(e.id, e.data())).toList();
     });
   }
 
   @override
   Stream<List<LocationRequest>> observeMyLocationRequests(String userId) {
-    return _firestore
-        .collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS)
-        .where('requesting_user_id', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) {
+    return _firestore.collection(FirestoreConstants.COLLECTION_LOCATION_REQUESTS).where('requesting_user_id', isEqualTo: userId).snapshots().map((snapshot) {
       return snapshot.docs.map((e) => LocationRequest.fromJson(e.id, e.data())).toList();
     });
   }

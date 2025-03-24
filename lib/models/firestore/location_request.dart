@@ -24,6 +24,9 @@ class LocationRequest extends Equatable {
   @JsonKey(name: 'requesting_user_id')
   final String requestingUserId;
 
+  @JsonKey(name: 'requesting_user_raw_data')
+  final String requestingUserData;
+
   @JsonKey(name: 'requested_user_id')
   final String requestedUserId;
 
@@ -31,10 +34,10 @@ class LocationRequest extends Equatable {
   @TimestampConverter()
   final DateTime requestedAt;
 
-  const LocationRequest({this.id, required this.requestingUserId, required this.requestedUserId, required this.requestedAt});
+  const LocationRequest({this.id, required this.requestingUserId, required this.requestingUserData, required this.requestedUserId, required this.requestedAt});
 
   @override
-  List<Object?> get props => [id, requestingUserId, requestedUserId, requestedAt];
+  List<Object?> get props => [id, requestingUserId, requestingUserData, requestedUserId, requestedAt];
 
   factory LocationRequest.fromJson(String id, Map<String, dynamic> json) => _$LocationRequestFromJson(json..addAll({"id": id}));
 
