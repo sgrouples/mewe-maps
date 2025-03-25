@@ -14,17 +14,22 @@ export const onLocationRequestCreate = functions.firestore
     const requestData = {
       requestedUserId: data.requested_user_id,
       requestingUserId: data.requesting_user_id,
+      requestingUserJsonString: data.requesting_user_raw_data,
       requestedAt: data.requested_at,
     };
+
 
     if (
       !requestData.requestedUserId ||
       !requestData.requestingUserId ||
+      !requestData.requestingUserJsonString ||
       !requestData.requestedAt
     ) {
-      console.error("Missing required fields in the location request.");
+      console.error("Missing required fields in the location request. Data: ", String(data));
       return null;
     }
+
+    const requestedUserName = JSON.parse(requestData.requestingUserJsonString).name;
 
     try {
       const userDoc = await admin
@@ -57,7 +62,7 @@ export const onLocationRequestCreate = functions.firestore
         token: fcmToken,
         notification: {
           title: "Location Request",
-          body: `User ${requestData.requestedUserId} requests your location.`,
+          body: `User ${requestedUserName} requests your location.`,
         },
         data: {
           requestData: String(data),
