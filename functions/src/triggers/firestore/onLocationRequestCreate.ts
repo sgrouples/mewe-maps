@@ -60,8 +60,7 @@ export const onLocationRequestCreate = functions.firestore
           body: `User ${requestData.requestedUserId} requests your location.`,
         },
         data: {
-          createdAt: requestData.requestedAt,
-          requestingUserId: requestData.requestingUserId,
+          requestData: String(data),
         },
       };
 
