@@ -21,6 +21,32 @@ Before pushing anything to the default branch, format the code with:
 dart format . --line-length 160
 ```
 
+### 3. Deploying Firebase Functions
+
+This project includes Firebase Cloud Functions located in the `functions` directory. To deploy them, follow these steps:
+
+#### Install Firebase CLI (if not already installed):
+```sh
+npm install -g firebase-tools
+```
+#### Login to Firebase:
+```sh
+firebase login
+```
+#### Link the project to Firebase (if not already linked):
+```sh
+firebase use --add
+```
+#### Install Firebase Functions Dependencies:
+```sh
+cd functions
+npm install
+```
+#### Deploy Firebase Functions:
+```sh
+firebase deploy --only functions
+```
+
 ## License
 ```text
 Copyright MeWe 2025.
