@@ -9,7 +9,6 @@
 .history
 .svn/
 migrate_working_dir/
-.env
 
 # IntelliJ related
 *.iml
@@ -46,8 +45,12 @@ app.*.map.json
 
 /build
 /ios/Vendor
+/android/app/.cxx/
+
+# Secrets
+.env
 /lib/services/firebase/firebase_options.dart
 /android/app/google-services.json
 /ios/Runner/GoogleService-Info.plist
 /firebase.json
-/android/app/.cxx/
+/.firebaserc

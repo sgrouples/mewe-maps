@@ -32,17 +32,8 @@ part 'contacts_state.dart';
 const _TAG = 'ContactsBloc';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-  final ContactsRepository _contactsRepository;
-  final SharingLocationRepository _sharingLocationRepository;
-  final HiddenFromMapRepository _hiddenFromMapRepository;
-
-  StreamSubscription? _contactsLocationsSubscription;
-  StreamSubscription? _myPositionSubscription;
-
-  List<User> _contacts = [];
-
   ContactsBloc(this._contactsRepository, this._sharingLocationRepository, this._hiddenFromMapRepository) : super(const ContactsState(error: "")) {
-    on<StartObservingData>(_loadContacts);
+    on<StartObservingData>(_startObservingData);
     on<ReloadContacts>(_reloadContacts);
     on<ReloadContactLocationData>(_reloadContactLocationData);
     on<ShareMyPositionStarted>(_startSharingPosition);
@@ -51,13 +42,20 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     on<LogOutClicked>(_logOutClicked);
     on<ShareMyPositionChanged>(_shareMyPositionChanged);
     on<ContactLocationDataChanged>(_contactLocationDataChanged);
-    on<ContactsSearchQueryChanged>((event, emit) {
-      emit(state.copyWith(contactsSearchQuery: event.query));
-    });
-    on<ContactLocationDataSearchQueryChanged>((event, emit) {
-      emit(state.copyWith(contactLocationDataSearchQuery: event.query));
-    });
+    on<SearchQueryChanged>(_contactsSearchQueryChanged);
+    on<AskForLocationClicked>(_askForLocationClicked);
+    on<CancelRequestForLocationClicked>(_cancelRequestForLocationClicked);
   }
+
+  final ContactsRepository _contactsRepository;
+  final SharingLocationRepository _sharingLocationRepository;
+  final HiddenFromMapRepository _hiddenFromMapRepository;
+
+  StreamSubscription? _contactsLocationsSubscription;
+  StreamSubscription? _myPositionSubscription;
+
+  final BehaviorSubject<List<User>> _contactsSubject = BehaviorSubject.seeded([]);
+  final BehaviorSubject<String> _contactsSearchQuerySubject = BehaviorSubject.seeded("");
 
   @override
   void onEvent(ContactsEvent event) {
@@ -66,9 +64,9 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     Logger.log(_TAG, "state ${state.toString()}");
   }
 
-  void _loadContacts(StartObservingData event, Emitter<ContactsState> emit) async {
+  void _startObservingData(StartObservingData event, Emitter<ContactsState> emit) async {
     try {
-      _contacts = await _contactsRepository.getContacts();
+      _contactsSubject.value = await _contactsRepository.getContacts();
       emit(state.copyWith(error: ""));
       _observeContactsLocation();
       _observeMySharePositionData();
@@ -79,77 +77,106 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _reloadContacts(ReloadContacts event, Emitter<ContactsState> emit) async {
     try {
-      _contacts = [];
-      emit(state.copyWith(contacts: null, shareMyPositionData: null));
-      _contacts = await _contactsRepository.getContacts(forceRefresh: true);
+      emit(state.copyWith(contactsToShareWith: null, shareMyPositionData: null));
+      _contactsSubject.value = await _contactsRepository.getContacts(forceRefresh: true);
       emit(state.copyWith(error: ""));
-      _refreshSharingSessions();
     } catch (error) {
       emit(state.copyWith(error: "Failed to get contacts. ${error.toString()}"));
     }
   }
 
   void _reloadContactLocationData(ReloadContactLocationData event, Emitter<ContactsState> emit) async {
-    // it reloads automatically every 5 seconds
     emit(state.copyWith(contactLocationData: null));
   }
 
   void _observeMySharePositionData() {
-    _myPositionSubscription = _sharingLocationRepository.observeSharingSessionsAsOwner(StorageRepository.user!.userId).startWith([]).listen((sharingSessions) {
-      _handleMySharingSessions(sharingSessions);
+    _myPositionSubscription = CombineLatestStream.combine3(
+        _sharingLocationRepository.observeSharingSessionsAsOwner(StorageRepository.user!.userId).startWith([]),
+        _contactsSubject,
+        _contactsSearchQuerySubject,
+        (sharingSessions, contacts, searchQuery) => (sharingSessions, contacts, searchQuery)).listen((data) {
+      _handleMySharingSessions(data.$1, data.$2, data.$3);
     });
   }
 
-  void _refreshSharingSessions() {
-    _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId).then((sharingSessions) {
-      if (sharingSessions == null) return;
-      _handleMySharingSessions(sharingSessions);
-    });
-  }
-
-  void _handleMySharingSessions(List<SharingSession> sharingSessions) {
-    List<MyPositionSharing> myPositions = sharingSessions.mapNotNull((session) {
-      final contact = _contacts.firstOrNullWhere((contact) => contact.userId == session.recipientId);
-      if (contact == null) return null;
-      return MyPositionSharing(contact: contact, sharingSessionId: session.id, sharedUntil: session.shareUntil);
-    }).toList();
-
-    List<User> filteredContacts = _contacts.whereNot((contact) => sharingSessions.any((session) => session.recipientId == contact.userId)).toList();
+  void _handleMySharingSessions(List<SharingSession> sharingSessions, List<User> contacts, String searchQuery) {
+    List<MyPositionSharing> myPositions = sharingSessions
+        .mapNotNull((session) {
+          final contact = contacts.firstOrNullWhere((contact) => contact.userId == session.recipientId);
+          if (contact == null) return null;
+          return MyPositionSharing(contact: contact, sharingSessionId: session.id, sharedUntil: session.shareUntil);
+        })
+        .filter((position) => position.contact.name.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+    List<User> filteredContacts = contacts
+        .whereNot((contact) => sharingSessions.any((session) => session.recipientId == contact.userId))
+        .filter((contact) => contact.name.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
     add(ShareMyPositionChanged(myPositions, filteredContacts));
   }
 
   void _shareMyPositionChanged(ShareMyPositionChanged event, Emitter<ContactsState> emit) async {
     emit(state.copyWith(
       shareMyPositionData: event.shareMyPositionData,
-      contacts: event.contacts,
+      contactsToShareWith: event.contactsToShareWith,
     ));
   }
 
   void _contactLocationDataChanged(ContactLocationDataChanged event, Emitter<ContactsState> emit) async {
     emit(state.copyWith(
       contactLocationData: event.contactLocationData,
+      contactsToRequestLocation: event.contactsToRequestLocation,
     ));
   }
 
+  void _contactsSearchQueryChanged(SearchQueryChanged event, Emitter<ContactsState> emit) async {
+    _contactsSearchQuerySubject.add(event.query);
+    emit(state.copyWith(query: event.query));
+  }
+
+  void _askForLocationClicked(AskForLocationClicked event, Emitter<ContactsState> emit) async {
+    try {
+      await _sharingLocationRepository.requestLocationFromContact(StorageRepository.user!, event.user.userId);
+    } catch (error) {
+      Logger.log(_TAG, "Failed to ask for location. ${error.toString()}");
+    }
+  }
+
+  void _cancelRequestForLocationClicked(CancelRequestForLocationClicked event, Emitter<ContactsState> emit) async {
+    try {
+      await _sharingLocationRepository.cancelRequestForLocation(StorageRepository.user!.userId, event.user.userId);
+    } catch (error) {
+      Logger.log(_TAG, "Failed to cancel request for location. ${error.toString()}");
+    }
+  }
+
   void _observeContactsLocation() {
-    _contactsLocationsSubscription = CombineLatestStream.combine2(
+    _contactsLocationsSubscription = CombineLatestStream.combine5(
         _sharingLocationRepository.observeContactsSharingData(StorageRepository.user!.userId).startWith([]),
         _hiddenFromMapRepository.observeHiddenUsers().startWith([]),
-        (contactsSharingData, hiddenUsers) => (contactsSharingData, hiddenUsers)).listen((data) {
-      final contactLocationData = data.$1.map((sharingData) {
-        return MapEntry(
-          sharingData.contact,
-          !data.$2.contains(sharingData.contactId),
-        );
+        _contactsSubject,
+        _contactsSearchQuerySubject,
+        _sharingLocationRepository.observeMyLocationRequests(StorageRepository.user!.userId).startWith([]),
+        (contactsSharingData, hiddenUsers, contacts, searchQuery, myLocationRequests) =>
+            (contactsSharingData, hiddenUsers, contacts, searchQuery, myLocationRequests)).listen((data) {
+      final contactLocationData = data.$1.filter((entry) {
+        return entry.contact.name.toLowerCase().contains(data.$4.toLowerCase());
+      }).map((sharingData) {
+        return MapEntry(sharingData.contact, !data.$2.contains(sharingData.contactId));
       });
-      add(ContactLocationDataChanged(Map.fromEntries(contactLocationData)));
+      final contactsToRequestLocation = data.$3.filter((contact) {
+        return !data.$1.any((sharingData) => sharingData.contactId == contact.userId) && contact.name.toLowerCase().contains(data.$4.toLowerCase());
+      }).map((user) {
+        return MapEntry(user, data.$5.any((request) => request.requestedUserId == user.userId));
+      });
+
+      add(ContactLocationDataChanged(Map.fromEntries(contactLocationData), Map.fromEntries(contactsToRequestLocation)));
     });
   }
 
   void _startSharingPosition(ShareMyPositionStarted event, Emitter<ContactsState> emit) async {
     try {
       await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.contact, event.minutes, true);
-      _refreshSharingSessions();
     } catch (error) {
       Logger.log(_TAG, "Failed to share position. ${error.toString()}");
     }
@@ -158,7 +185,6 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
   void _stopSharingPosition(ShareMyPositionStopped event, Emitter<ContactsState> emit) async {
     try {
       await _sharingLocationRepository.stopSharingSession(event.sessionId);
-      _refreshSharingSessions();
     } catch (error) {
       Logger.log(_TAG, "Failed to stop sharing position. ${error.toString()}");
     }

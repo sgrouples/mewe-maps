@@ -16,12 +16,14 @@ class ContactListItem extends StatelessWidget {
   final User user;
   final VoidCallback? onTapped;
   final Widget? trailing;
+  final String? label;
 
   const ContactListItem({
     super.key,
     required this.user,
     this.trailing,
     this.onTapped,
+    this.label,
   });
 
   @override
@@ -30,7 +32,7 @@ class ContactListItem extends StatelessWidget {
       leading: UserAvatar(
         user: user,
       ),
-      title: Text(user.name),
+      title: (label == null) ? Text(user.name) : Text("${user.name} ($label)"),
       subtitle: Text(
         user.publicLinkId,
         style: const TextStyle(

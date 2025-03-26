@@ -12,6 +12,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mewe_maps/repositories/authentication/authentication_repository.dart';
 import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
+import 'package:mewe_maps/repositories/fcm/firebase_cloud_messaging_repository.dart';
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
@@ -53,4 +54,5 @@ List<RepositoryProvider> repositoryProviders = [
   RepositoryProvider<SharingLocationRepository>(create: (context) => FirestoreSharingLocationRepository()),
   RepositoryProvider<MyLocationRepository>(create: (context) => MyLocationRepositoryImpl()),
   RepositoryProvider<HiddenFromMapRepository>(create: (context) => MemoryHiddenFromMapRepository()),
+  RepositoryProvider<FirebaseCloudMessagingRepository>(create: (context) => FirebaseCloudMessagingRepository()),
 ];
