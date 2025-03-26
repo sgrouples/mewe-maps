@@ -32,9 +32,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'map_bloc.g.dart';
-
 part 'map_event.dart';
-
 part 'map_state.dart';
 
 const _TAG = 'MapBloc';

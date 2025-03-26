@@ -13,7 +13,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/modules/contacts/view/components/contacts_search_query_field.dart';
 
-import '../../../../utils/logger.dart';
 import '../../bloc/contacts_bloc.dart';
 import 'contact_list_item.dart';
 
@@ -90,8 +89,8 @@ class ContactsSharedWithMeTab extends StatelessWidget {
                                 user: contact,
                                 label: (state.contactsToRequestLocation![contact] ?? false) ? "Requested" : null,
                                 trailing: state.contactsToRequestLocation![contact]!
-                                    ? buildCancelRequestLocationButton(context, contact)
-                                    : buildRequestLocationButton(context, contact),
+                                    ? _buildCancelRequestLocationButton(context, contact)
+                                    : _buildRequestLocationButton(context, contact),
                               );
                       },
                     ))
@@ -103,7 +102,7 @@ class ContactsSharedWithMeTab extends StatelessWidget {
   }
 }
 
-IconButton buildRequestLocationButton(BuildContext context, User contact) {
+IconButton _buildRequestLocationButton(BuildContext context, User contact) {
   return IconButton(
     icon: const Icon(Icons.add),
     onPressed: () {
@@ -135,7 +134,7 @@ IconButton buildRequestLocationButton(BuildContext context, User contact) {
   );
 }
 
-IconButton buildCancelRequestLocationButton(BuildContext context, User contact) {
+IconButton _buildCancelRequestLocationButton(BuildContext context, User contact) {
   return IconButton(
     icon: const Icon(Icons.cancel_outlined),
     onPressed: () {

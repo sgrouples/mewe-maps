@@ -37,7 +37,7 @@ class LoginPage extends StatelessWidget {
             if (state.challenge! == ChallengesResponse.challengeCaptcha) {
               _showCaptchaChallengeDialog(context);
             } else if (state.challenge! == ChallengesResponse.challengeArkose) {
-              showArkoseChallengeDialog(context);
+              _showArkoseChallengeDialog(context);
             }
           }
         },
@@ -119,7 +119,7 @@ class LoginPage extends StatelessWidget {
     _showChallengeDialog(context, controller, challenge);
   }
 
-  void showArkoseChallengeDialog(BuildContext context) {
+  void _showArkoseChallengeDialog(BuildContext context) {
     const challenge = ChallengesResponse.challengeArkose;
     final WebViewController controller = WebViewController();
     controller.setJavaScriptMode(JavaScriptMode.unrestricted);

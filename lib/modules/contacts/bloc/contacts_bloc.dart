@@ -77,7 +77,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _reloadContacts(ReloadContacts event, Emitter<ContactsState> emit) async {
     try {
-      _contactsSubject.value = [];
+      emit(state.copyWith(contactsToShareWith: null, shareMyPositionData: null));
       _contactsSubject.value = await _contactsRepository.getContacts(forceRefresh: true);
       emit(state.copyWith(error: ""));
     } catch (error) {
