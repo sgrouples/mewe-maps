@@ -171,7 +171,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _respondForLocationRequest(RespondForLocationRequest event, Emitter<MapState> emit) async {
     if (event.minutesToShare != null) {
-      _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!, true);
+      _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!);
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
     } else {
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
@@ -262,7 +262,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   Future<void> close() async {
     await _contactsLocationsSubscription?.cancel();
     await _stopObservingMyPosition();
-    await _firebaseCloudMessagingRepository.close();
+    _firebaseCloudMessagingRepository.close();
     return super.close();
   }
 }

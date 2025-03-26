@@ -33,7 +33,6 @@ part 'contacts_state.dart';
 const _TAG = 'ContactsBloc';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-
   final ContactsRepository _contactsRepository;
   final SharingLocationRepository _sharingLocationRepository;
   final HiddenFromMapRepository _hiddenFromMapRepository;
@@ -178,8 +177,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
   void _startSharingPosition(ShareMyPositionStarted event, Emitter<ContactsState> emit) async {
     try {
-      await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.contact, event.minutes, true);
-      _refreshSharingSessions();
+      await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.contact, event.minutes);
+      await shareMyLocationWithSessions();
     } catch (error) {
       Logger.log(_TAG, "Failed to share position. ${error.toString()}");
     }
