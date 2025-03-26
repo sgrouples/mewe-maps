@@ -172,7 +172,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _respondForLocationRequest(RespondForLocationRequest event, Emitter<MapState> emit) async {
-    if (event.minutesToShare != null && event.minutesToShare! > 0) {
+    if (event.minutesToShare != null) {
       _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!, true);
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
     } else {
