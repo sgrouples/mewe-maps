@@ -4,14 +4,49 @@
 
 ## Setup Instructions
 
-### 1. Environment Variables
-A `.env` file is required to build the project. Ensure you have it configured before proceeding.
+This project uses environment secrets, as well as Firebase and Google Services configuration files, which are excluded from Git:
 
-### 2. Code Generation
-Before running the app, generate necessary files by executing:
+```sh
+.env
+/lib/services/firebase/firebase_options.dart
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/firebase.json
+/.firebaserc
+```
+
+Contact the owners if you want to build the app.
+
+Additionally, before building the app, you need to generate g.dart files by executing:
 
 ```sh
 flutter pub run build_runner build
+```
+
+## Deploying Firebase Functions
+
+This project includes Firebase Cloud Functions located in the `functions` directory. To deploy them, follow these steps:
+
+#### 1. Install Firebase CLI (if not already installed):
+```sh
+npm install -g firebase-tools
+```
+#### 2. Login to Firebase:
+```sh
+firebase login
+```
+#### 3. Link the project to Firebase (if not already linked):
+```sh
+firebase use --add
+```
+#### 4. Install Firebase Functions Dependencies:
+```sh
+cd functions
+npm install
+```
+#### 5. Deploy Firebase Functions:
+```sh
+firebase deploy --only functions
 ```
 
 ## Code Style
@@ -19,32 +54,6 @@ Before pushing anything to the default branch, format the code with:
 
 ```sh
 dart format . --line-length 160
-```
-
-### 3. Deploying Firebase Functions
-
-This project includes Firebase Cloud Functions located in the `functions` directory. To deploy them, follow these steps:
-
-#### Install Firebase CLI (if not already installed):
-```sh
-npm install -g firebase-tools
-```
-#### Login to Firebase:
-```sh
-firebase login
-```
-#### Link the project to Firebase (if not already linked):
-```sh
-firebase use --add
-```
-#### Install Firebase Functions Dependencies:
-```sh
-cd functions
-npm install
-```
-#### Deploy Firebase Functions:
-```sh
-firebase deploy --only functions
 ```
 
 ## License

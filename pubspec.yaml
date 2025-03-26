@@ -47,7 +47,6 @@ dependencies:
   retrofit: '>=4.0.0 <5.0.0'
   logger: any  #for logging purpose
   dio: ^5.5.0+1
-  supabase_flutter: ^2.5.7
   dartx: ^1.2.0
   rxdart: ^0.28.0
   geolocator: ^12.0.0
