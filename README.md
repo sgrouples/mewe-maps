@@ -17,7 +17,7 @@ This project uses environment secrets, as well as Firebase and Google Services c
 
 Contact the owners if you want to build the app.
 
-Additionally, before building the app, you need to generate g.dart files by executing:
+Additionally, before building the app, you need to generate `g.dart` files by executing:
 
 ```sh
 flutter pub run build_runner build
