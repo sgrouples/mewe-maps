@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/modules/contacts/view/components/contacts_search_query_field.dart';
 
+import '../../../../utils/logger.dart';
 import '../../bloc/contacts_bloc.dart';
 import 'contact_list_item.dart';
 

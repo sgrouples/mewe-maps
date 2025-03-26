@@ -18,12 +18,12 @@ class ContactSharingData extends Equatable {
   final String contactId;
   final User contact;
   final DateTime shareUntil;
-  final Position position;
-  final DateTime updatedAt;
+  final Position? position;
+  final DateTime? updatedAt;
 
   @override
   List<Object?> get props => [id, contact, shareUntil, contactId, position, updatedAt];
 
   const ContactSharingData(
-      {required this.id, required this.contact, required this.shareUntil, required this.contactId, required this.position, required this.updatedAt});
+      {required this.id, required this.contact, required this.shareUntil, required this.contactId, this.position, this.updatedAt});
 }

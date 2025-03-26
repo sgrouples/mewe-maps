@@ -99,14 +99,13 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
       return cleanedSessions
           .map((session) {
             final data = cleanedSharedData.firstOrNullWhere((element) => element.sessionId == session.id);
-            if (data == null) return null;
             return ContactSharingData(
               id: session.id,
               contactId: session.ownerId,
               contact: User.fromJson(jsonDecode(session.ownerDataRaw)),
               shareUntil: session.shareUntil,
-              position: Position.fromMap(jsonDecode(data.positionDataRaw)),
-              updatedAt: data.updatedAt,
+              position: data != null ? Position.fromMap(jsonDecode(data.positionDataRaw)) : null,
+              updatedAt: data?.updatedAt,
             );
           })
           .nonNulls
@@ -116,12 +115,13 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
 
   @override
   Stream<List<SharingSession>> observeSharingSessionsAsOwner(String userId) {
-    return _firestore
-        .collection(FirestoreConstants.COLLECTION_SHARING_SESSIONS)
-        .where('owner_id', isEqualTo: userId)
-        .where("share_until", isGreaterThan: Timestamp.now())
-        .snapshots()
-        .map((snapshot) {
+    return CombineLatestStream.combine2(
+        _firestore
+            .collection(FirestoreConstants.COLLECTION_SHARING_SESSIONS)
+            .where('owner_id', isEqualTo: userId)
+            .where("share_until", isGreaterThan: Timestamp.now())
+            .snapshots(),
+        Stream.periodic(const Duration(seconds: 10)), (snapshot, _) {
       final sessions = snapshot.docs.map((e) => SharingSession.fromJson(e.id, e.data())).toList();
       return _cleanUpOldSessions(sessions);
     });

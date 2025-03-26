@@ -126,13 +126,13 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       List<UserPosition> contactsLocations = [];
 
       for (final sharingData in data.$1) {
-        if (data.$2.contains(sharingData.contactId)) {
+        if (data.$2.contains(sharingData.contactId) || sharingData.position == null || sharingData.updatedAt == null) {
           continue;
         }
         contactsLocations.add(UserPosition(
           user: sharingData.contact,
-          position: sharingData.position,
-          timestamp: sharingData.updatedAt,
+          position: sharingData.position!,
+          timestamp: sharingData.updatedAt!,
           shareUntil: sharingData.shareUntil,
         ));
       }

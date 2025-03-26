@@ -53,7 +53,7 @@ class ContactLocationDataChanged extends ContactsEvent {
   ContactLocationDataChanged(this.contactLocationData, this.contactsToRequestLocation);
 
   @override
-  List<Object?> get props => [contactLocationData];
+  List<Object?> get props => [contactLocationData, contactsToRequestLocation];
 }
 
 class DisplayOnTheMapChanged extends ContactsEvent {
