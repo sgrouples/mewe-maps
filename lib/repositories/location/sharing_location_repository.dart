@@ -93,7 +93,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
             .where('recipient_id', isEqualTo: userId)
             .snapshots()
             .map((sharedData) => sharedData.docs.map((e) => ShareData.fromJson(e.id, e.data())).toList()),
-        Stream.periodic(const Duration(seconds: 10)), (sessions, sharedData, _) {
+        Stream.periodic(const Duration(seconds: 10)).startWith(null), (sessions, sharedData, _) {
       final (cleanedSharedData, cleanedSessions) = _cleanUpOldSharingData(sharedData, sessions);
 
       return cleanedSessions
@@ -121,7 +121,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
             .where('owner_id', isEqualTo: userId)
             .where("share_until", isGreaterThan: Timestamp.now())
             .snapshots(),
-        Stream.periodic(const Duration(seconds: 10)), (snapshot, _) {
+        Stream.periodic(const Duration(seconds: 10)).startWith(null), (snapshot, _) {
       final sessions = snapshot.docs.map((e) => SharingSession.fromJson(e.id, e.data())).toList();
       return _cleanUpOldSessions(sessions);
     });

@@ -21,51 +21,58 @@ class LocationRequestsList extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<MapBloc, MapState>(
       buildWhen: (old, current) => old.locationRequests != current.locationRequests,
-      builder: (context, state) => ListView.builder(
-        itemCount: state.locationRequests.length,
-        itemBuilder: (context, index) {
-          final request = state.locationRequests.keys.elementAt(index);
-          final user = state.locationRequests[request]!;
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+      builder: (context, state) {
+        final locationRequests = state.locationRequests;
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 32.0),
+          child: Column(
+            children: locationRequests.entries.map((entry) {
+              final request = entry.key;
+              final user = entry.value;
+
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).colorScheme.surface,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ListTile(
-                title: Text(user.name),
-                subtitle: const Text("Request to see your location"),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => context.read<MapBloc>().add(RespondForLocationRequest(request, user, null)),
+                  child: ListTile(
+                    title: Text(user.name),
+                    subtitle: const Text("Request to see your location"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => context.read<MapBloc>().add(RespondForLocationRequest(request, user, null)),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.check),
+                          onPressed: () async {
+                            final interval = await showIntervalModal(context, user);
+                            if (context.mounted && interval != null) {
+                              context.read<MapBloc>().add(RespondForLocationRequest(request, user, interval));
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.check),
-                      onPressed: () async {
-                        final interval = await showIntervalModal(context, user);
-                        if (context.mounted && interval != null) {
-                          context.read<MapBloc>().add(RespondForLocationRequest(request, user, interval));
-                        }
-                      },
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 }
