@@ -16,6 +16,7 @@ import 'package:mewe_maps/modules/app/app_lifecycle_tracker.dart';
 import 'package:mewe_maps/modules/contacts/view/contacts_page.dart';
 import 'package:mewe_maps/modules/map/bloc/map_bloc.dart';
 import 'package:mewe_maps/modules/map/view/components/loading_widget.dart';
+import 'package:mewe_maps/modules/map/view/components/location_requests_list.dart';
 import 'package:mewe_maps/modules/map/view/components/location_tracking_icon.dart';
 import 'package:mewe_maps/modules/map/view/components/selected_user_bottom_view.dart';
 import 'package:mewe_maps/modules/map/view/map_controller_manager.dart';
@@ -37,6 +38,7 @@ class MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (BuildContext context) => MapBloc(
+        context.read(),
         context.read(),
         context.read(),
         context.read(),
@@ -150,7 +152,12 @@ class MapPageState extends State<MapPage> {
 
     return Scaffold(
       body: Stack(
-        children: [mapWidget, if (!state.mapInitialized) const LoadingWidget(), Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom())],
+        children: [
+          mapWidget,
+          if (!state.mapInitialized) const LoadingWidget(),
+          const LocationRequestsList(),
+          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom()),
+        ],
       ),
     );
   }

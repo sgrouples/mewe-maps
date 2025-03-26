@@ -55,6 +55,15 @@ class UpdateContactsLocation extends MapEvent {
   List<Object?> get props => [positions];
 }
 
+class UpdateLocationRequests extends MapEvent {
+  final List<LocationRequest> locationRequests;
+
+  UpdateLocationRequests(this.locationRequests);
+
+  @override
+  List<Object?> get props => [locationRequests];
+}
+
 class OpenMeWeClicked extends MapEvent {
   final UserPosition position;
 
@@ -114,4 +123,15 @@ class PreviousUserClicked extends MapEvent {
 class NextUserClicked extends MapEvent {
   @override
   List<Object?> get props => ['NextUserClicked'];
+}
+
+class RespondForLocationRequest extends MapEvent {
+  final LocationRequest request;
+  final User user;
+  final int? minutesToShare;
+
+  RespondForLocationRequest(this.request, this.user, this.minutesToShare);
+
+  @override
+  List<Object?> get props => [request, user, minutesToShare];
 }

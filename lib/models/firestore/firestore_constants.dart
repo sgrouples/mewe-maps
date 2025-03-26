@@ -8,14 +8,9 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-Future<void> initializeSupabase() async {
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-    debug: kDebugMode,
-  );
+class FirestoreConstants {
+  static const String COLLECTION_SHARING_SESSIONS = "sharing_sessions";
+  static const String COLLECTION_SHARING_DATA = "shared_data";
+  static const String COLLECTION_USERS_PRIVATE_DATA = "users_private_data";
+  static const String COLLECTION_LOCATION_REQUESTS = "location_requests";
 }
