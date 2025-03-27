@@ -26,6 +26,7 @@ import 'package:mewe_maps/repositories/location/sharing_location_repository.dart
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
+import 'package:mewe_maps/services/location/stop_tracking_on_no_sessions.dart';
 import 'package:mewe_maps/services/permissions/permissions.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
@@ -110,12 +111,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   Future<void> _stopObservingMyPosition() async {
-    _myPositionSubscription?.cancel();
-    final sessions = await _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId);
-    Logger.log(_TAG, "_stopObservingMyPosition sessions=${sessions?.length}");
-    if (sessions == null || sessions.isEmpty) {
-      await _myLocationRepository.cancelObservingPrecisePosition();
-    }
+    await stopPreciseTrackingOnNoSessions();
+    await _myPositionSubscription?.cancel();
   }
 
   void _observeContactsPosition() {
@@ -260,9 +257,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   @override
   Future<void> close() async {
-    await _contactsLocationsSubscription?.cancel();
     await _stopObservingMyPosition();
-    _firebaseCloudMessagingRepository.close();
+    await _contactsLocationsSubscription?.cancel();
+    await _firebaseCloudMessagingRepository.close();
     return super.close();
   }
 }
