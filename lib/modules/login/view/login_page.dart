@@ -57,10 +57,13 @@ class LoginPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                'assets/icon/app_icon.png',
-                width: 100,
-                height: 100,
+              ClipOval(
+                child: Image.asset(
+                  'assets/icon/app_icon.png',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
               ),
               const SizedBox(height: 20),
               TextField(

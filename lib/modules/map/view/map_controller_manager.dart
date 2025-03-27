@@ -51,13 +51,18 @@ class MapControllerManager {
 
   void setContactsPositions(List<UserPosition> newPositions) {
     _lock.synchronized(() async {
-      final currentPositions = _contactsPositions;
+      final currentPositions = List.of(_contactsPositions);
+      final positionsToRemove = <UserPosition>[];
+
       for (final position in currentPositions) {
         if (newPositions.none((it) => it.user.userId == position.user.userId)) {
           await mapController.removeMarker(position.geoPoint);
-          _contactsPositions.remove(position);
+          positionsToRemove.add(position);
         }
       }
+
+      _contactsPositions.removeWhere((pos) => positionsToRemove.contains(pos));
+
       for (final position in newPositions) {
         final currentPosition = currentPositions.firstOrNullWhere((it) => it.user.userId == position.user.userId);
         if (currentPosition == null || currentPosition.geoPoint != position.geoPoint) {

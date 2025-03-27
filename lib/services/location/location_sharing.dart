@@ -8,7 +8,6 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-import 'package:dartx/dartx_io.dart';
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
@@ -16,8 +15,8 @@ import 'package:mewe_maps/utils/logger.dart';
 
 const String _TAG = "shareMyLocationWithSessions";
 
-Future<bool> shareMyLocationWithSessions(bool isPrecise) async {
-  Logger.log(_TAG, "called with isPrecise=$isPrecise");
+Future<bool> shareMyLocationWithSessions() async {
+  Logger.log(_TAG, "shareMyLocationWithSessions");
 
   final userId = StorageRepository.user?.userId;
   if (userId != null) {
@@ -27,8 +26,7 @@ Future<bool> shareMyLocationWithSessions(bool isPrecise) async {
       final sharingRepository = FirestoreSharingLocationRepository();
       final sessions = await sharingRepository.getSharingSessionsAsOwner(userId);
       if (sessions != null && sessions.isNotEmpty) {
-        final filteredSessions = sessions.filter((session) => session.isPrecise == isPrecise).toList();
-        await sharingRepository.uploadPosition(lastPosition, filteredSessions);
+        await sharingRepository.uploadPosition(lastPosition, sessions);
         Logger.log(_TAG, "success");
         return true;
       } else {

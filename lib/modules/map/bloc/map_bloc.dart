@@ -109,11 +109,11 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     });
   }
 
-  void _stopObservingMyPosition() async {
+  Future<void> _stopObservingMyPosition() async {
     _myPositionSubscription?.cancel();
     final sessions = await _sharingLocationRepository.getSharingSessionsAsOwner(StorageRepository.user!.userId);
-    final hasPreciseSharing = sessions?.any((session) => session.isPrecise) ?? false;
-    if (!hasPreciseSharing) {
+    Logger.log(_TAG, "_stopObservingMyPosition sessions=${sessions?.length}");
+    if (sessions == null || sessions.isEmpty) {
       await _myLocationRepository.cancelObservingPrecisePosition();
     }
   }
@@ -171,7 +171,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _respondForLocationRequest(RespondForLocationRequest event, Emitter<MapState> emit) async {
     if (event.minutesToShare != null) {
-      _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!, true);
+      _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!);
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
     } else {
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
@@ -260,8 +260,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   @override
   Future<void> close() async {
-    _contactsLocationsSubscription?.cancel();
-    _stopObservingMyPosition();
+    await _contactsLocationsSubscription?.cancel();
+    await _stopObservingMyPosition();
     _firebaseCloudMessagingRepository.close();
     return super.close();
   }
