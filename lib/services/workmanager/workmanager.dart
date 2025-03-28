@@ -10,11 +10,13 @@
 
 import 'package:mewe_maps/isolates.dart';
 import 'package:mewe_maps/services/location/location_sharing.dart';
+import 'package:mewe_maps/services/location/stop_tracking_on_no_sessions.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:workmanager/workmanager.dart';
 
 const String _TAG = "workmanagerCallback";
-const String _NOT_PRECISE_BACKGROUND_SHARING_TASK = "NotPreciseBackgroundSharing";
+const String _PERIODIC_SHARE_LOCATION_TASK = "_PERIODIC_SHARE_LOCATION_TASK";
+const String _STOP_TRACKING_NO_SESSIONS_TASK = "_STOP_TRACKING_NO_SESSIONS_TASK";
 
 @pragma('vm:entry-point')
 void workmanagerCallback() async {
@@ -23,19 +25,30 @@ void workmanagerCallback() async {
   Workmanager().executeTask((task, inputData) async {
     Logger.log(_TAG, "executeTask $task");
 
-    if (task == _NOT_PRECISE_BACKGROUND_SHARING_TASK) {
+    if (task == _PERIODIC_SHARE_LOCATION_TASK) {
       await shareMyLocationWithSessions();
+    } else if (task == _STOP_TRACKING_NO_SESSIONS_TASK) {
+      await stopPreciseTrackingOnNoSessions();
     }
 
     return Future.value(true);
   });
 }
 
-Future<void> initializeNotPreciseBackgroundSharing() async {
-  Workmanager().initialize(workmanagerCallback);
-  Workmanager().registerPeriodicTask(
-    _NOT_PRECISE_BACKGROUND_SHARING_TASK,
-    _NOT_PRECISE_BACKGROUND_SHARING_TASK,
+Future<void> initializeWorkManager() async {
+  await Workmanager().initialize(workmanagerCallback);
+}
+
+Future<void> registerPeriodicShareMyLocationWithSessions() async {
+  await Workmanager().registerPeriodicTask(
+    _PERIODIC_SHARE_LOCATION_TASK,
+    _PERIODIC_SHARE_LOCATION_TASK,
     frequency: const Duration(minutes: 15),
   );
+  Logger.log(_TAG, "registerPeriodicShareMyLocationWithSessions success");
+}
+
+Future<void> registerStopPreciseTrackingOnNoSessions() async {
+  await Workmanager().registerOneOffTask(_STOP_TRACKING_NO_SESSIONS_TASK, _STOP_TRACKING_NO_SESSIONS_TASK);
+  Logger.log(_TAG, "registerStopPreciseTrackingOnNoSessions success");
 }

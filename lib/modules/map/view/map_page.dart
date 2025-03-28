@@ -9,6 +9,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:mewe_maps/models/user.dart';
@@ -21,6 +22,7 @@ import 'package:mewe_maps/modules/map/view/components/location_tracking_icon.dar
 import 'package:mewe_maps/modules/map/view/components/selected_user_bottom_view.dart';
 import 'package:mewe_maps/modules/map/view/map_controller_manager.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
+import 'package:mewe_maps/services/workmanager/workmanager.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -150,14 +152,22 @@ class MapPageState extends State<MapPage> {
       },
     );
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          mapWidget,
-          if (!state.mapInitialized) const LoadingWidget(),
-          const LocationRequestsList(),
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom()),
-        ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await registerStopPreciseTrackingOnNoSessions();
+        SystemNavigator.pop();
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            mapWidget,
+            if (!state.mapInitialized) const LoadingWidget(),
+            const LocationRequestsList(),
+            Positioned(bottom: 0, left: 0, right: 0, child: _buildBottom()),
+          ],
+        ),
       ),
     );
   }

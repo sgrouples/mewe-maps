@@ -16,7 +16,8 @@ import 'package:mewe_maps/services/workmanager/workmanager.dart';
 
 void main() async {
   await initializeIsolate();
-  await initializeNotPreciseBackgroundSharing();
+  await initializeWorkManager();
+  await registerPeriodicShareMyLocationWithSessions();
   AppLifecycleTracker().initObserver();
   runApp(const RestartWidget(child: AppPage()));
 }
