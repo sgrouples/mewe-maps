@@ -42,6 +42,10 @@ class AuthInterceptor extends Interceptor {
       return handler.next(options);
     }
 
+    if (options.uri.path.endsWith('/api/dev/signin')) {
+      return handler.next(options);
+    }
+
     if (options.uri.path.endsWith('/auth/token')) {
       AuthData authData = StorageRepository.authData!;
       options.headers[_AUTH_KEY] = 'Sgrouples refreshToken=${authData.refreshToken}';
