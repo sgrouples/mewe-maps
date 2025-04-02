@@ -12,6 +12,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:mewe_maps/services/http/timeout_constants.dart';
 import 'package:mewe_maps/utils/logger.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -30,7 +31,8 @@ class ImageDownloader {
 
       // Download the image and add it to the cache
       try {
-        final response = await http.get(Uri.parse(imageUrl));
+        final response = await http.get(Uri.parse(imageUrl)).timeout(Timeouts.receiveTimeout);
+
         if (response.statusCode == 200) {
           final Uint8List imageData = response.bodyBytes;
           final MemoryImage image = MemoryImage(imageData);

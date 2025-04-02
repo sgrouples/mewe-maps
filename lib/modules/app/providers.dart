@@ -8,7 +8,6 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mewe_maps/repositories/authentication/authentication_repository.dart';
 import 'package:mewe_maps/repositories/contacts/contacts_repository.dart';
@@ -18,24 +17,14 @@ import 'package:mewe_maps/repositories/location/sharing_location_repository.dart
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
 import 'package:mewe_maps/services/http/auth_interceptor.dart';
+import 'package:mewe_maps/services/http/dio_client.dart';
 import 'package:mewe_maps/services/http/image_downloader.dart';
 import 'package:mewe_maps/services/http/mewe_service.dart';
-import 'package:mewe_maps/utils/logger.dart';
 
 List<RepositoryProvider> repositoryProviders = [
   RepositoryProvider<MeWeService>(
     create: (context) => MeWeService(
-      Dio()
-        ..interceptors.addAll([
-          LogInterceptor(
-            requestBody: true,
-            responseBody: true,
-            logPrint: (o) => {
-              if (Logger.LOG_DIO) {Logger.log("LogInterceptor", o.toString())}
-            },
-          ),
-          AuthInterceptor(),
-        ]),
+      DioClient.createDio()..interceptors.add(AuthInterceptor()),
       baseUrl: AuthConfig.meweHost,
     ),
   ),

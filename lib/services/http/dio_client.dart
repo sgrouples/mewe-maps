@@ -8,11 +8,28 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-class Logger {
-  static bool LOG_DIO = true;
+import 'package:dio/dio.dart';
+import 'package:mewe_maps/services/http/timeout_constants.dart';
+import 'package:mewe_maps/utils/logger.dart';
 
-  static void log(String tag, String text) {
-    final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-    pattern.allMatches(text).forEach((match) => print("MEWE_MAPS: $tag: ${match.group(0)}"));
+class DioClient {
+  static Dio createDio() {
+    Dio dio = Dio(BaseOptions(
+      connectTimeout: Timeouts.connectTimeout,
+      sendTimeout: Timeouts.sendTimeout,
+      receiveTimeout: Timeouts.receiveTimeout,
+    ));
+
+    dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      logPrint: (o) {
+        if (Logger.LOG_DIO) {
+          Logger.log("LogInterceptor", o.toString());
+        }
+      },
+    ));
+
+    return dio;
   }
 }
