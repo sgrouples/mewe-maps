@@ -73,6 +73,9 @@ class ContactsMySharingLocationTab extends StatelessWidget {
                             final sharingData = shareMyPositionData[index];
                             return ContactListItem(
                               user: sharingData.contact,
+                              onTapped: () {
+                                Navigator.of(context).pop(sharingData.contact);
+                              },
                               trailing: ContactSwitch(
                                 value: true,
                                 switchText: sharingData.sharedUntil.year == 9999 ? "Until I stop" : "Until ${DateFormat.Hm().format(sharingData.sharedUntil)}",
@@ -85,6 +88,9 @@ class ContactsMySharingLocationTab extends StatelessWidget {
                             final contact = contactsToShareWith[index - shareMyPositionData.length];
                             return ContactListItem(
                               user: contact,
+                              onTapped: () {
+                                Navigator.of(context).pop(contact);
+                              },
                               trailing: IconButton(
                                 onPressed: () async {
                                   final minutes = await showIntervalModal(context, contact);

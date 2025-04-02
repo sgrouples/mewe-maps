@@ -77,7 +77,7 @@ class ContactsPage extends StatelessWidget {
                                 Navigator.of(context).pop(StorageRepository.user);
                               },
                               icon: UserAvatar(
-                                user: StorageRepository.user!,
+                                user: StorageRepository.user,
                                 radius: 15,
                               ),
                             ),
