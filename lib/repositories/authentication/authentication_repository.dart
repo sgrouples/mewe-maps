@@ -8,9 +8,12 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'package:mewe_maps/services/http/auth_constants.dart';
 import 'package:mewe_maps/services/http/mewe_service.dart';
 import 'package:mewe_maps/services/http/model/challenges_response.dart';
 import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
+import 'package:mewe_maps/services/http/model/signin_request.dart';
+import 'package:mewe_maps/services/http/model/signin_response.dart';
 
 abstract class AuthenticationRepository {
   Future<ChallengesResponse> getChallenges();
@@ -18,6 +21,8 @@ abstract class AuthenticationRepository {
   Future<LoginWithPasswordResponse> loginByEmail(String email, String password, String? challenge, String? challengeToken);
 
   Future<LoginWithPasswordResponse> loginByNumber(String phoneNumber, String password, String? challenge, String? challengeToken);
+
+  Future<SigninResponse> signIn(String userName);
 }
 
 class MeWeAuthenticationRepository implements AuthenticationRepository {
@@ -46,5 +51,10 @@ class MeWeAuthenticationRepository implements AuthenticationRepository {
     } else {
       return _meWeService.loginByNumber(phoneNumber, password);
     }
+  }
+
+  @override
+  Future<SigninResponse> signIn(String userName) {
+    return _meWeService.signIn(SigninRequest(username: userName), AuthConfig.meweAppId, AuthConfig.meweApiKey);
   }
 }

@@ -16,6 +16,7 @@ import 'package:mewe_maps/repositories/authentication/authentication_repository.
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/model/challenges_response.dart';
 import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
+import 'package:mewe_maps/services/http/model/signin_response.dart';
 import 'package:mewe_maps/utils/logger.dart';
 
 part 'login_bloc.g.dart';
@@ -51,24 +52,25 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   void _loginSubmitted(LoginSubmitted event, Emitter<LoginState> emit) async {
-    if (state.emailOrPhoneNumber.isEmpty || state.password.isEmpty) {
-      emit(state.copyWith(error: "Email / Phone Number and Password cannot be empty"));
-    } else {
-      emit(state.copyWith(isLoading: true));
-      try {
-        final challengesResponse = await _authenticationRepository.getChallenges();
-        if (challengesResponse.challenges.contains(ChallengesResponse.challengeCaptcha)) {
-          emit(state.copyWith(challenge: ChallengesResponse.challengeCaptcha));
-        } else if (challengesResponse.challenges.contains(ChallengesResponse.challengeArkose)) {
-          emit(state.copyWith(challenge: ChallengesResponse.challengeArkose));
-        } else {
-          final LoginWithPasswordResponse loginResponse = await _login(null, null);
-          emit(state.copyWith(error: "", user: loginResponse.user));
-        }
-      } catch (error) {
-        emit(state.copyWith(error: error.toString(), isLoading: false));
-      }
-    }
+    await _signin();
+    // if (state.emailOrPhoneNumber.isEmpty || state.password.isEmpty) {
+    //   emit(state.copyWith(error: "Email / Phone Number and Password cannot be empty"));
+    // } else {
+    //   emit(state.copyWith(isLoading: true));
+    //   try {
+    //     final challengesResponse = await _authenticationRepository.getChallenges();
+    //     if (challengesResponse.challenges.contains(ChallengesResponse.challengeCaptcha)) {
+    //       emit(state.copyWith(challenge: ChallengesResponse.challengeCaptcha));
+    //     } else if (challengesResponse.challenges.contains(ChallengesResponse.challengeArkose)) {
+    //       emit(state.copyWith(challenge: ChallengesResponse.challengeArkose));
+    //     } else {
+    //       final LoginWithPasswordResponse loginResponse = await _login(null, null);
+    //       emit(state.copyWith(error: "", user: loginResponse.user));
+    //     }
+    //   } catch (error) {
+    //     emit(state.copyWith(error: error.toString(), isLoading: false));
+    //   }
+    // }
   }
 
   void _challengeSubmitted(ChallengeSubmitted event, Emitter<LoginState> emit) async {
@@ -93,5 +95,17 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     StorageRepository.setUser(loginResponse.user);
     StorageRepository.setAuthData(loginResponse.getAuthData());
     return loginResponse;
+  }
+
+  Future<SigninResponse> _signin() async {
+    String emailOrPhoneNumber = state.emailOrPhoneNumber;
+
+    Logger.log("OLOLO", emailOrPhoneNumber);
+
+    final SigninResponse response = await _authenticationRepository.signIn(emailOrPhoneNumber);
+
+    Logger.log("OLOLO", response.loginRequestToken);
+
+    return response;
   }
 }

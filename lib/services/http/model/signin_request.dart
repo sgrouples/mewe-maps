@@ -8,11 +8,21 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-class Logger {
-  static bool LOG_DIO = true;
+import 'package:equatable/equatable.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-  static void log(String tag, String text) {
-    final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-    pattern.allMatches(text).forEach((match) => print("LOCATION_APP: $tag: ${match.group(0)}"));
-  }
+part 'signin_request.g.dart';
+
+@JsonSerializable()
+class SigninRequest extends Equatable {
+  final String username;
+
+  const SigninRequest({required this.username});
+
+  @override
+  List<Object?> get props => [username];
+
+  factory SigninRequest.fromJson(Map<String, dynamic> json) => _$SigninRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SigninRequestToJson(this);
 }

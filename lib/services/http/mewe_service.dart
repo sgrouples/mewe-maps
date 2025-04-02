@@ -12,41 +12,48 @@ import 'package:dio/dio.dart';
 import 'package:mewe_maps/services/http/model/challenges_response.dart';
 import 'package:mewe_maps/services/http/model/get_followed_response.dart';
 import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
-import 'package:retrofit/retrofit.dart';
+import 'package:mewe_maps/services/http/model/signin_request.dart';
+import 'package:mewe_maps/services/http/model/signin_response.dart';
+import 'package:retrofit/http.dart' as http;
+import 'package:retrofit/error_logger.dart';
 
 part 'mewe_service.g.dart';
 
-@RestApi()
+@http.RestApi()
 abstract class MeWeService {
   factory MeWeService(Dio dio, {String baseUrl}) = _MeWeService;
 
-  @GET('/api/v2/account/challenges-available')
-  @FormUrlEncoded()
+  @http.GET('/api/v2/account/challenges-available')
+  @http.FormUrlEncoded()
   Future<ChallengesResponse> getChallenges();
 
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByEmail(@Field() String username, @Field() String password);
+  @http.POST('/api/v2/auth/login')
+  @http.FormUrlEncoded()
+  Future<LoginWithPasswordResponse> loginByEmail(@http.Field() String username, @http.Field() String password);
 
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByNumber(@Field() String phoneNumber, @Field() String password);
+  @http.POST('/api/v2/auth/login')
+  @http.FormUrlEncoded()
+  Future<LoginWithPasswordResponse> loginByNumber(@http.Field() String phoneNumber, @http.Field() String password);
 
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByEmailWithChallenge(
-      @Field() String username, @Field() String password, @Field("challenge_provider") String challenge, @Field("session_token") String challengeToken);
+  @http.POST('/api/v2/auth/login')
+  @http.FormUrlEncoded()
+  Future<LoginWithPasswordResponse> loginByEmailWithChallenge(@http.Field() String username, @http.Field() String password,
+      @http.Field("challenge_provider") String challenge, @http.Field("session_token") String challengeToken);
 
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByNumberWithChallenge(
-      @Field() String phoneNumber, @Field() String password, @Field("challenge_provider") String challenge, @Field("session_token") String challengeToken);
+  @http.POST('/api/v2/auth/login')
+  @http.FormUrlEncoded()
+  Future<LoginWithPasswordResponse> loginByNumberWithChallenge(@http.Field() String phoneNumber, @http.Field() String password,
+      @http.Field("challenge_provider") String challenge, @http.Field("session_token") String challengeToken);
 
-  @GET('/api/v2/following/followed')
-  @FormUrlEncoded()
+  @http.GET('/api/v2/following/followed')
+  @http.FormUrlEncoded()
   Future<GetFollowedResponse> getFollowed();
 
-  @GET('{nextPageUrl}')
-  @FormUrlEncoded()
-  Future<GetFollowedResponse> getFollowedNextPage(@Path("nextPageUrl") String nextPageUrl);
+  @http.GET('{nextPageUrl}')
+  @http.FormUrlEncoded()
+  Future<GetFollowedResponse> getFollowedNextPage(@http.Path("nextPageUrl") String nextPageUrl);
+
+  @http.POST('/api/dev/signin')
+  @http.Headers({"Content-Type": "application/json"})
+  Future<SigninResponse> signIn(@http.Body() SigninRequest request, @http.Header("X-App-Id") String appId, @http.Header("X-Api-Key") String apiKey);
 }
