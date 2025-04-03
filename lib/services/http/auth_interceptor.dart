@@ -14,8 +14,8 @@ import 'package:dio/dio.dart';
 import 'package:mewe_maps/models/auth_data.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
+import 'package:mewe_maps/services/http/dio_client.dart';
 import 'package:mewe_maps/services/http/model/auth_token_response.dart';
-import 'package:mewe_maps/utils/logger.dart';
 
 class AuthInterceptor extends Interceptor {
   static const String _AUTH_KEY = 'Authorization';
@@ -23,20 +23,11 @@ class AuthInterceptor extends Interceptor {
   static const String _COOKIE_AUTH_HEADER = '@CookieAuth';
   static const String _NO_AUTH_HEADER = '@NoAuth';
 
-  final Dio _tokenRefreshDio = Dio();
+  final Dio _tokenRefreshDio = DioClient.createDio();
   Completer? _tokenRefreshCompleter;
 
   AuthInterceptor() {
-    _tokenRefreshDio.interceptors.addAll([
-      this,
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        logPrint: (o) => {
-          if (Logger.LOG_DIO) {Logger.log("LogInterceptor", o.toString())}
-        },
-      ),
-    ]);
+    _tokenRefreshDio.interceptors.add(this);
   }
 
   @override

@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:mewe_maps/models/user.dart';
 
 class UserAvatar extends StatelessWidget {
-  final User user;
+  final User? user;
   final ImageProvider? customImage;
   final Color? backgroundColor;
   final double radius;
@@ -21,7 +21,7 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String avatarUrl = user.halLinks.getAvatarUrl();
+    String avatarUrl = user?.halLinks.getAvatarUrl() ?? "";
     double borderWidth = radius * 0.1;
     return Container(
       width: radius * 2 + borderWidth * 2,

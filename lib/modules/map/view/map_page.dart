@@ -51,7 +51,7 @@ class MapPageState extends State<MapPage> {
           listeners: [
             _buildAppVisibilityListener(),
             _buildTrackingListener(),
-            _buildMyPositionListenerListener(),
+            _buildMyPositionListener(),
             _buildContactsPositionsListener(),
             _buildSelectedUserListener(),
             _buildShowPermissionListener()
@@ -101,7 +101,7 @@ class MapPageState extends State<MapPage> {
         },
       );
 
-  BlocListener<MapBloc, MapState> _buildMyPositionListenerListener() => BlocListener<MapBloc, MapState>(
+  BlocListener<MapBloc, MapState> _buildMyPositionListener() => BlocListener<MapBloc, MapState>(
         listenWhen: (previous, current) => previous.myPosition != current.myPosition,
         listener: (context, state) {
           context.read<MapControllerManager>().setMyPosition(state.myPosition);

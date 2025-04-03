@@ -76,7 +76,7 @@ lane :build do |options|
     build_number: build_number
   )
 
-  build_location_app(
+  build_mewe_maps(
     scheme: options[:scheme],
     configuration: options[:configuration]
   )
@@ -167,7 +167,7 @@ end
 
 # Private build lanes
 
-private_lane :build_location_app do |options|
+private_lane :build_mewe_maps do |options|
   # scheme = options[:scheme] || "Runner"
   # gym(
   #   project: "Runner.xcodeproj",

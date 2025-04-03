@@ -29,7 +29,7 @@ class HalLinks extends Equatable {
   List<Object?> get props => [avatar, nextPage];
 
   String getAvatarUrl() {
-    final String url = avatar!.href;
+    final String url = avatar?.href ?? "";
     if (url.startsWith("https://")) {
       return url;
     } else if (url.isEmpty) {

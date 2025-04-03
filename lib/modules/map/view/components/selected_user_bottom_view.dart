@@ -135,7 +135,7 @@ class SelectedUserBottomView extends StatelessWidget {
         ),
         child: Center(
           child: UserAvatar(
-            user: state.selectedUser!.user,
+            user: state.selectedUser?.user,
             radius: 36,
           ),
         ),
