@@ -34,7 +34,7 @@ class ContactListItem extends StatelessWidget {
       ),
       title: (label == null) ? Text(user.name) : Text("${user.name} ($label)"),
       subtitle: Text(
-        user.publicLinkId,
+        user.handle,
         style: const TextStyle(
           fontSize: 12.0,
           color: Colors.grey,

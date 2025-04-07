@@ -10,7 +10,6 @@
 
 import 'dart:convert';
 
-import 'package:mewe_maps/models/auth_data.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +20,7 @@ abstract class StorageRepository {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static const _kAuthData = "AuthData";
+  static const _kToken = "Token";
   static const _kUser = "User";
 
   static bool getFlag(String key, bool def) {
@@ -34,18 +33,6 @@ abstract class StorageRepository {
     _prefs.setBool(key, value);
   }
 
-  static AuthData? get authData {
-    final string = _prefs.getString(_kAuthData);
-    if (string == null) return null;
-    final map = jsonDecode(string);
-    return AuthData.fromJson(map);
-  }
-
-  static setAuthData(AuthData authData) {
-    final string = jsonEncode(authData);
-    _prefs.setString(_kAuthData, string);
-  }
-
   static User? get user {
     final string = _prefs.getString(_kUser);
     if (string == null) return null;
@@ -56,6 +43,14 @@ abstract class StorageRepository {
   static setUser(User user) {
     final string = jsonEncode(user);
     _prefs.setString(_kUser, string);
+  }
+
+  static String? get token {
+    return _prefs.getString(_kToken);
+  }
+
+  static setToken(String token) {
+    _prefs.setString(_kToken, token);
   }
 
   static clear() {

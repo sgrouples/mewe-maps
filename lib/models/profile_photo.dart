@@ -11,21 +11,22 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'challenges_response.g.dart';
+part 'profile_photo.g.dart';
 
 @JsonSerializable()
-class ChallengesResponse extends Equatable {
-  static const String challengeCaptcha = 'hCaptcha';
-  static const String challengeArkose = 'arkose';
+class ProfilePhoto extends Equatable {
+  @JsonKey(name: "href")
+  final String href;
 
-  final List<String> challenges;
+  @JsonKey(name: "small")
+  final String small;
 
-  const ChallengesResponse({required this.challenges});
+  const ProfilePhoto({required this.href, required this.small});
 
   @override
-  List<Object?> get props => [challenges];
+  List<Object?> get props => [href, small];
 
-  factory ChallengesResponse.fromJson(Map<String, dynamic> json) => _$ChallengesResponseFromJson(json);
+  factory ProfilePhoto.fromJson(Map<String, dynamic> json) => _$ProfilePhotoFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ChallengesResponseToJson(this);
+  Map<String, dynamic> toJson() => _$ProfilePhotoToJson(this);
 }

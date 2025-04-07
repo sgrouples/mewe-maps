@@ -24,7 +24,7 @@ import 'package:mewe_maps/services/http/mewe_service.dart';
 List<RepositoryProvider> repositoryProviders = [
   RepositoryProvider<MeWeService>(
     create: (context) => MeWeService(
-      DioClient.createDio()..interceptors.add(AuthInterceptor()),
+      DioClient.createDio()..interceptors.insert(0, AuthInterceptor()),
       baseUrl: AuthConfig.meweHost,
     ),
   ),

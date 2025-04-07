@@ -11,15 +11,18 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:mewe_maps/models/auth_data.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
 import 'package:mewe_maps/services/http/dio_client.dart';
-import 'package:mewe_maps/services/http/model/auth_token_response.dart';
+import 'package:mewe_maps/services/http/model/get_token_response.dart';
+import 'package:mewe_maps/utils/logger.dart';
+
+const String _TAG = "AuthInterceptor";
 
 class AuthInterceptor extends Interceptor {
+  static const String _APP_ID = 'X-App-Id';
+  static const String _API_KEY = 'X-Api-Key';
   static const String _AUTH_KEY = 'Authorization';
-  static const String _COOKIE = 'Cookie';
   static const String _COOKIE_AUTH_HEADER = '@CookieAuth';
   static const String _NO_AUTH_HEADER = '@NoAuth';
 
@@ -27,40 +30,39 @@ class AuthInterceptor extends Interceptor {
   Completer? _tokenRefreshCompleter;
 
   AuthInterceptor() {
-    _tokenRefreshDio.interceptors.add(this);
+    _tokenRefreshDio.interceptors.insert(0, this);
   }
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    if (!isMeweRequest(options.uri.host) || isCookieAuth(options) || isNoAuth(options)) {
+    if (!_isMeweRequest(options.uri.host) || _isCookieAuth(options) || _isNoAuth(options)) {
+      Logger.log(_TAG, "CookieAuth or NoAuth request: ${options.uri}");
       options.headers.remove(_COOKIE_AUTH_HEADER);
       options.headers.remove(_NO_AUTH_HEADER);
       return handler.next(options);
     }
 
-    if (options.uri.path.endsWith('/auth/login') || options.uri.path.endsWith('/account/challenges-available')) {
-      return handler.next(options);
+    if (!options.headers.containsKey(Headers.contentTypeHeader)) {
+      options.headers[Headers.contentTypeHeader] = Headers.jsonContentType;
     }
 
-    if (options.uri.path.endsWith('/api/dev/signin')) {
-      return handler.next(options);
-    }
-
-    if (options.uri.path.endsWith('/auth/token')) {
-      AuthData authData = StorageRepository.authData!;
-      options.headers[_AUTH_KEY] = 'Sgrouples refreshToken=${authData.refreshToken}';
+    if (options.uri.path.endsWith('/api/dev/signin') || options.uri.path.endsWith('/api/dev/token')) {
+      Logger.log(_TAG, "Authentication request: ${options.uri}");
+      options.headers[_APP_ID] = AuthConfig.meweAppId;
+      options.headers[_API_KEY] = AuthConfig.meweApiKey;
       return handler.next(options);
     }
 
     if (_tokenRefreshCompleter != null) {
+      Logger.log(_TAG, "Waiting for token refresh: ${options.uri}");
       await _tokenRefreshCompleter?.future;
       _tokenRefreshCompleter = null;
       return onRequest(options, handler);
     }
 
-    AuthData authData = StorageRepository.authData!;
-    options.headers[_AUTH_KEY] = 'Sgrouples accessToken=${authData.accessToken}';
-    options.headers[_COOKIE] = authData.cdnAccessParams.buildCdnCookie();
+    String token = StorageRepository.token!;
+    options.headers[_APP_ID] = AuthConfig.meweAppId;
+    options.headers[_AUTH_KEY] = 'Bearer $token';
 
     return handler.next(options);
   }
@@ -70,14 +72,18 @@ class AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       _tokenRefreshCompleter = Completer<void>();
       try {
-        final newAuthData = await refreshToken();
-        StorageRepository.setAuthData(newAuthData);
-        _tokenRefreshCompleter?.complete();
-        final retryOptions = err.requestOptions;
-        retryOptions.headers[_AUTH_KEY] = 'Sgrouples accessToken=${newAuthData.accessToken}';
-        retryOptions.headers[_COOKIE] = newAuthData.cdnAccessParams.buildCdnCookie();
-        final response = await _tokenRefreshDio.fetch(retryOptions);
-        return handler.resolve(response);
+        final newToken = await refreshToken();
+        if (newToken != null) {
+          StorageRepository.setToken(newToken);
+          _tokenRefreshCompleter?.complete();
+          final retryOptions = err.requestOptions;
+          retryOptions.headers[_APP_ID] = AuthConfig.meweAppId;
+          retryOptions.headers[_AUTH_KEY] = 'Bearer $newToken';
+          final response = await _tokenRefreshDio.fetch(retryOptions);
+          return handler.resolve(response);
+        } else {
+          return handler.next(err);
+        }
       } catch (e) {
         _tokenRefreshCompleter?.completeError(e);
         return handler.next(err);
@@ -89,26 +95,30 @@ class AuthInterceptor extends Interceptor {
     return handler.next(err);
   }
 
-  bool isMeweRequest(String host) {
-    return host.endsWith("mewe.com") || host.endsWith("groupl.es") || host.endsWith("sgr-labs.com");
+  bool _isMeweRequest(String host) {
+    return AuthConfig.meweHost.contains(host);
   }
 
-  bool isNoAuth(RequestOptions options) {
+  bool _isNoAuth(RequestOptions options) {
     return options.headers.containsKey(_NO_AUTH_HEADER);
   }
 
-  bool isCookieAuth(RequestOptions options) {
+  bool _isCookieAuth(RequestOptions options) {
     return options.headers.containsKey(_COOKIE_AUTH_HEADER);
   }
 
-  Future<AuthData> refreshToken() async {
+  Future<String?> refreshToken() async {
     final response = await _tokenRefreshDio.post(
-      '${AuthConfig.meweHost}/api/v2/auth/token',
+      '${AuthConfig.meweHost}/api/dev/token',
       options: Options(
-        contentType: Headers.formUrlEncodedContentType,
+        contentType: Headers.jsonContentType,
       ),
     );
-    final authTokenResponse = AuthTokenResponse.fromJson(response.data);
-    return authTokenResponse.getAuthData();
+    final tokenResponse = GetTokenResponse.fromJson(response.data);
+    if (tokenResponse.pending) {
+      return null;
+    } else {
+      return tokenResponse.token;
+    }
   }
 }

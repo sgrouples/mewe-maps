@@ -10,12 +10,11 @@
 
 import 'package:bloc/bloc.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/repositories/authentication/authentication_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
-import 'package:mewe_maps/services/http/model/challenges_response.dart';
-import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
 import 'package:mewe_maps/services/http/model/signin_response.dart';
 import 'package:mewe_maps/utils/logger.dart';
 
@@ -28,12 +27,9 @@ const _TAG = 'LoginBloc';
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthenticationRepository _authenticationRepository;
 
-  LoginBloc(this._authenticationRepository)
-      : super(const LoginState(emailOrPhoneNumber: "", password: "", error: "", isLoading: false, user: null, challenge: null)) {
+  LoginBloc(this._authenticationRepository) : super(const LoginState(emailOrPhoneNumber: "", error: "", isLoading: false, user: null)) {
     on<EmailOrPhoneNumberChanged>(_emailOrPhoneNumberChanged);
-    on<PasswordChanged>(_passwordChanged);
     on<LoginSubmitted>(_loginSubmitted);
-    on<ChallengeSubmitted>(_challengeSubmitted);
   }
 
   @override
@@ -47,65 +43,32 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(state.copyWith(emailOrPhoneNumber: event.emailOrPhoneNumber));
   }
 
-  void _passwordChanged(PasswordChanged event, Emitter<LoginState> emit) {
-    emit(state.copyWith(password: event.password));
-  }
-
   void _loginSubmitted(LoginSubmitted event, Emitter<LoginState> emit) async {
-    await _signin();
-    // if (state.emailOrPhoneNumber.isEmpty || state.password.isEmpty) {
-    //   emit(state.copyWith(error: "Email / Phone Number and Password cannot be empty"));
-    // } else {
-    //   emit(state.copyWith(isLoading: true));
-    //   try {
-    //     final challengesResponse = await _authenticationRepository.getChallenges();
-    //     if (challengesResponse.challenges.contains(ChallengesResponse.challengeCaptcha)) {
-    //       emit(state.copyWith(challenge: ChallengesResponse.challengeCaptcha));
-    //     } else if (challengesResponse.challenges.contains(ChallengesResponse.challengeArkose)) {
-    //       emit(state.copyWith(challenge: ChallengesResponse.challengeArkose));
-    //     } else {
-    //       final LoginWithPasswordResponse loginResponse = await _login(null, null);
-    //       emit(state.copyWith(error: "", user: loginResponse.user));
-    //     }
-    //   } catch (error) {
-    //     emit(state.copyWith(error: error.toString(), isLoading: false));
-    //   }
-    // }
-  }
-
-  void _challengeSubmitted(ChallengeSubmitted event, Emitter<LoginState> emit) async {
-    emit(state.copyWith(challenge: null));
-    try {
-      final LoginWithPasswordResponse loginResponse = await _login(event.challenge, event.challengeToken);
-      emit(state.copyWith(error: "", user: loginResponse.user));
-    } catch (error) {
-      emit(state.copyWith(error: error.toString(), isLoading: false));
-    }
-  }
-
-  Future<LoginWithPasswordResponse> _login(String? challenge, String? challengeToken) async {
-    String emailOrPhoneNumber = state.emailOrPhoneNumber;
-    String password = state.password;
-    final LoginWithPasswordResponse loginResponse;
-    if (emailOrPhoneNumber.contains('@')) {
-      loginResponse = await _authenticationRepository.loginByEmail(emailOrPhoneNumber, password, challenge, challengeToken);
+    if (state.emailOrPhoneNumber.isEmpty) {
+      emit(state.copyWith(error: "Email / Phone Number cannot be empty"));
     } else {
-      loginResponse = await _authenticationRepository.loginByNumber(emailOrPhoneNumber, password, challenge, challengeToken);
+      emit(state.copyWith(isLoading: true));
+      try {
+        final User user = await _login();
+        emit(state.copyWith(error: "", user: user));
+      } on DioException catch (e) {
+        if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
+          emit(state.copyWith(error: "Connection timeout. Please try again.", isLoading: false));
+        } else {
+          emit(state.copyWith(error: e.toString(), isLoading: false));
+        }
+      } catch (error) {
+        emit(state.copyWith(error: error.toString(), isLoading: false));
+      }
     }
-    StorageRepository.setUser(loginResponse.user);
-    StorageRepository.setAuthData(loginResponse.getAuthData());
-    return loginResponse;
   }
 
-  Future<SigninResponse> _signin() async {
+  Future<User> _login() async {
     String emailOrPhoneNumber = state.emailOrPhoneNumber;
-
-    Logger.log("OLOLO", emailOrPhoneNumber);
-
-    final SigninResponse response = await _authenticationRepository.signIn(emailOrPhoneNumber);
-
-    Logger.log("OLOLO", response.loginRequestToken);
-
-    return response;
+    final SigninResponse tokenResponse = await _authenticationRepository.signIn(emailOrPhoneNumber);
+    StorageRepository.setToken(tokenResponse.loginRequestToken);
+    final User userResponse = await _authenticationRepository.getMyUser();
+    StorageRepository.setUser(userResponse);
+    return userResponse;
   }
 }

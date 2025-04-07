@@ -128,7 +128,7 @@ class MapControllerManager {
   }
 
   Future<void> _addMarker(UserPosition position) async {
-    String avatarUlr = position.user.halLinks.getAvatarUrl();
+    String avatarUlr = position.user.profilePhoto.small;
 
     MemoryImage? avatarImage;
 

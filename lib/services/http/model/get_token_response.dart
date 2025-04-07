@@ -10,31 +10,21 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mewe_maps/services/http/model/cdn_access_params.dart';
 
-part 'auth_data.g.dart';
+part 'get_token_response.g.dart';
 
 @JsonSerializable()
-class AuthData extends Equatable {
-  final String accessToken;
-  final int expires;
-  final int expiresIn;
-  final String refreshToken;
-  final int refreshTokenExpires;
-  final CdnAccessParams cdnAccessParams;
+class GetTokenResponse extends Equatable {
+  final bool pending;
+  final int expiresAt;
+  final String token;
 
-  const AuthData(
-      {required this.accessToken,
-      required this.expires,
-      required this.expiresIn,
-      required this.refreshToken,
-      required this.refreshTokenExpires,
-      required this.cdnAccessParams});
+  const GetTokenResponse({required this.pending, required this.expiresAt, required this.token});
 
   @override
-  List<Object?> get props => [accessToken, expires, expiresIn, refreshToken, refreshTokenExpires, cdnAccessParams];
+  List<Object?> get props => [pending, expiresAt, token];
 
-  factory AuthData.fromJson(Map<String, dynamic> json) => _$AuthDataFromJson(json);
+  factory GetTokenResponse.fromJson(Map<String, dynamic> json) => _$GetTokenResponseFromJson(json);
 
-  Map<String, dynamic> toJson() => _$AuthDataToJson(this);
+  Map<String, dynamic> toJson() => _$GetTokenResponseToJson(this);
 }
