@@ -15,11 +15,11 @@ part 'get_token_response.g.dart';
 
 @JsonSerializable()
 class GetTokenResponse extends Equatable {
-  final bool pending;
-  final int expiresAt;
-  final String token;
+  final bool? pending;
+  final String? expiresAt;
+  final String? token;
 
-  const GetTokenResponse({required this.pending, required this.expiresAt, required this.token});
+  const GetTokenResponse({this.pending, this.expiresAt, this.token});
 
   @override
   List<Object?> get props => [pending, expiresAt, token];

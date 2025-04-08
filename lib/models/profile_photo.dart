@@ -10,6 +10,7 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mewe_maps/services/http/avatar_href_parser.dart';
 
 part 'profile_photo.g.dart';
 
@@ -22,6 +23,10 @@ class ProfilePhoto extends Equatable {
   final String small;
 
   const ProfilePhoto({required this.href, required this.small});
+
+  String avatarUrl() {
+    return AvatarHrefParser.parseAvatarUrl(href);
+  }
 
   @override
   List<Object?> get props => [href, small];

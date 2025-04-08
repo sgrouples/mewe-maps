@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:mewe_maps/models/user_position.dart';
 import 'package:mewe_maps/modules/map/view/components/marker_user.dart';
+import 'package:mewe_maps/services/http/avatars.dart';
 import 'package:mewe_maps/services/http/image_downloader.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -128,7 +129,7 @@ class MapControllerManager {
   }
 
   Future<void> _addMarker(UserPosition position) async {
-    String avatarUlr = position.user.profilePhoto.small;
+    String avatarUlr = position.user.profilePhoto.avatarUrl() ?? "";
 
     MemoryImage? avatarImage;
 

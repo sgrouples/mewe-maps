@@ -49,26 +49,37 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     } else {
       emit(state.copyWith(isLoading: true));
       try {
-        final User user = await _login();
-        emit(state.copyWith(error: "", user: user));
-      } on DioException catch (e) {
-        if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout || e.type == DioExceptionType.sendTimeout) {
-          emit(state.copyWith(error: "Connection timeout. Please try again.", isLoading: false));
-        } else {
-          emit(state.copyWith(error: e.toString(), isLoading: false));
-        }
+        final User? user = await _login(emit);
+        emit(state.copyWith(error: "", user: user, isLoading: false));
       } catch (error) {
         emit(state.copyWith(error: error.toString(), isLoading: false));
       }
     }
   }
 
-  Future<User> _login() async {
+  Future<User?> _login(Emitter<LoginState> emit) async {
     String emailOrPhoneNumber = state.emailOrPhoneNumber;
     final SigninResponse tokenResponse = await _authenticationRepository.signIn(emailOrPhoneNumber);
-    StorageRepository.setToken(tokenResponse.loginRequestToken);
-    final User userResponse = await _authenticationRepository.getMyUser();
-    StorageRepository.setUser(userResponse);
+    StorageRepository.setLoginToken(tokenResponse.loginRequestToken);
+    return await _getMyUser(emit);
+  }
+
+  Future<User?> _getMyUser(Emitter<LoginState> emit) async {
+    User? userResponse;
+    int retries = 0;
+    do {
+      try {
+        userResponse = await _authenticationRepository.getMyUser();
+        StorageRepository.setUser(userResponse);
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401) {
+          emit(state.copyWith(error: "Please accept the MeWe Maps session request in your MeWe account."));
+          await Future.delayed(const Duration(seconds: 10));
+        }
+      } catch (error) {
+        rethrow;
+      }
+    } while (userResponse == null && retries < 6);
     return userResponse;
   }
 }

@@ -22,7 +22,7 @@ part 'mewe_service.g.dart';
 abstract class MeWeService {
   factory MeWeService(Dio dio, {String baseUrl}) = _MeWeService;
 
-  @http.GET('/api/v2/following/followed')
+  @http.GET('/api/dev/socialgraph/followed')
   @http.Headers({"Content-Type": "application/json"})
   Future<GetFollowedResponse> getFollowed();
 
@@ -34,7 +34,7 @@ abstract class MeWeService {
   @http.Headers({"Content-Type": "application/json"})
   Future<SigninResponse> signIn(@http.Body() SigninRequest request);
 
-  @http.POST('/api/dev/me')
+  @http.GET('/api/dev/me')
   @http.Headers({"Content-Type": "application/json"})
   Future<User> getMyUser();
 }

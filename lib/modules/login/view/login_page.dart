@@ -60,6 +60,7 @@ class LoginPage extends StatelessWidget {
                 onChanged: (value) => context.read<LoginBloc>().add(EmailOrPhoneNumberChanged(value)),
                 decoration: const InputDecoration(labelText: "Email / Phone Number"),
               ),
+              const SizedBox(height: 20),
               const Text("You will receive a MeWe Maps session request linked to your MeWe account. Please accept it to continue."),
               const SizedBox(height: 20),
               Stack(
@@ -67,7 +68,7 @@ class LoginPage extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: state.isLoading ? null : () => context.read<LoginBloc>().add(LoginSubmitted()),
-                    child: const Text("Authorize"),
+                    child: const Text("Continue"),
                   ),
                   if (state.isLoading)
                     const Positioned(

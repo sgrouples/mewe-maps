@@ -21,7 +21,7 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String avatarUrl = user?.profilePhoto.small ?? "";
+    String avatarUrl = user?.profilePhoto.avatarUrl() ?? "";
     double borderWidth = radius * 0.1;
     return Container(
       width: radius * 2 + borderWidth * 2,

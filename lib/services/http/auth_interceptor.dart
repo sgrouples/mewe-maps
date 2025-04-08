@@ -46,8 +46,16 @@ class AuthInterceptor extends Interceptor {
       options.headers[Headers.contentTypeHeader] = Headers.jsonContentType;
     }
 
-    if (options.uri.path.endsWith('/api/dev/signin') || options.uri.path.endsWith('/api/dev/token')) {
+    if (options.uri.path.endsWith('/api/dev/signin')) {
       Logger.log(_TAG, "Authentication request: ${options.uri}");
+      options.headers[_APP_ID] = AuthConfig.meweAppId;
+      options.headers[_API_KEY] = AuthConfig.meweApiKey;
+      options.receiveTimeout = const Duration(minutes: 1);
+      return handler.next(options);
+    }
+
+    if (options.uri.path.endsWith('/api/dev/token')) {
+      Logger.log(_TAG, "Token refresh request: ${options.uri}");
       options.headers[_APP_ID] = AuthConfig.meweAppId;
       options.headers[_API_KEY] = AuthConfig.meweApiKey;
       return handler.next(options);
@@ -60,7 +68,7 @@ class AuthInterceptor extends Interceptor {
       return onRequest(options, handler);
     }
 
-    String token = StorageRepository.token!;
+    String? token = StorageRepository.token;
     options.headers[_APP_ID] = AuthConfig.meweAppId;
     options.headers[_AUTH_KEY] = 'Bearer $token';
 
@@ -70,9 +78,10 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
+      Logger.log(_TAG, "Handling 401 error...");
       _tokenRefreshCompleter = Completer<void>();
       try {
-        final newToken = await refreshToken();
+        final newToken = await _refreshToken();
         if (newToken != null) {
           StorageRepository.setToken(newToken);
           _tokenRefreshCompleter?.complete();
@@ -107,18 +116,17 @@ class AuthInterceptor extends Interceptor {
     return options.headers.containsKey(_COOKIE_AUTH_HEADER);
   }
 
-  Future<String?> refreshToken() async {
-    final response = await _tokenRefreshDio.post(
-      '${AuthConfig.meweHost}/api/dev/token',
+  Future<String?> _refreshToken() async {
+    final response = await _tokenRefreshDio.get(
+      '${AuthConfig.meweHost}api/dev/token',
+      queryParameters: {
+        'otp': StorageRepository.loginToken,
+      },
       options: Options(
         contentType: Headers.jsonContentType,
       ),
     );
     final tokenResponse = GetTokenResponse.fromJson(response.data);
-    if (tokenResponse.pending) {
-      return null;
-    } else {
-      return tokenResponse.token;
-    }
+    return tokenResponse.token;
   }
 }

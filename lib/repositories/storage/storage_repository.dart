@@ -20,6 +20,7 @@ abstract class StorageRepository {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  static const _kLoginToken = "LoginToken";
   static const _kToken = "Token";
   static const _kUser = "User";
 
@@ -43,6 +44,14 @@ abstract class StorageRepository {
   static setUser(User user) {
     final string = jsonEncode(user);
     _prefs.setString(_kUser, string);
+  }
+
+  static String? get loginToken {
+    return _prefs.getString(_kLoginToken);
+  }
+
+  static setLoginToken(String loginToken) {
+    _prefs.setString(_kLoginToken, loginToken);
   }
 
   static String? get token {
