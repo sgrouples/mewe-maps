@@ -16,7 +16,7 @@ import 'package:mewe_maps/utils/logger.dart';
 const String _TAG = "shareMyLocationWithSessions";
 
 Future<bool> shareMyLocationWithSessions() async {
-  Logger.logOnline(_TAG, "shareMyLocationWithSessions");
+  await Logger.logOnline(_TAG, "shareMyLocationWithSessions");
 
   final userId = StorageRepository.user?.userId;
   if (userId != null) {
