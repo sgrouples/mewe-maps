@@ -20,11 +20,8 @@ class User extends Equatable {
   @JsonKey(name: "userId")
   final String userId;
 
-  @JsonKey(name: "firstName")
+  @JsonKey(name: "name")
   final String name;
-
-  @JsonKey(name: "lastName")
-  final String lastName;
 
   @JsonKey(name: "handle")
   final String handle;
@@ -32,14 +29,14 @@ class User extends Equatable {
   @JsonKey(name: "profilePhoto")
   final ProfilePhoto profilePhoto;
 
-  const User({required this.userId, required this.name, required this.lastName, required this.handle, required this.profilePhoto});
+  const User({required this.userId, required this.name, required this.handle, required this.profilePhoto});
 
   bool isMe() {
     return userId == StorageRepository.user?.userId;
   }
 
   @override
-  List<Object?> get props => [userId, name, lastName, handle, profilePhoto];
+  List<Object?> get props => [userId, name, handle, profilePhoto];
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
