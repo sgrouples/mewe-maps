@@ -16,7 +16,7 @@ import 'package:mewe_maps/utils/logger.dart';
 const String _TAG = "shareMyLocationWithSessions";
 
 Future<bool> shareMyLocationWithSessions() async {
-  Logger.log(_TAG, "shareMyLocationWithSessions");
+  Logger.logOnline(_TAG, "shareMyLocationWithSessions");
 
   final userId = StorageRepository.user?.userId;
   if (userId != null) {
@@ -27,16 +27,16 @@ Future<bool> shareMyLocationWithSessions() async {
       final sessions = await sharingRepository.getSharingSessionsAsOwner(userId);
       if (sessions != null && sessions.isNotEmpty) {
         await sharingRepository.uploadPosition(lastPosition, sessions);
-        Logger.log(_TAG, "success");
+        await Logger.logOnline(_TAG, "success");
         return true;
       } else {
-        Logger.log(_TAG, "failed (no sessions)");
+        await Logger.logOnline(_TAG, "failed (no sessions)");
       }
     } else {
-      Logger.log(_TAG, "failed (no last position)");
+      await Logger.logOnline(_TAG, "failed (no last position)");
     }
   } else {
-    Logger.log(_TAG, "failed (no current user)");
+    await Logger.logOnline(_TAG, "failed (no current user)");
   }
   return false;
 }

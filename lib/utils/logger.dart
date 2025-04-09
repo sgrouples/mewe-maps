@@ -8,11 +8,21 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'package:flutter/foundation.dart';
+import 'package:mewe_maps/utils/loggly_logger.dart';
+
 class Logger {
-  static bool LOG_DIO = false;
+  static bool LOG_DIO = true;
 
   static void log(String tag, String text) {
-    final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-    pattern.allMatches(text).forEach((match) => print("MEWE_MAPS: $tag: ${match.group(0)}"));
+    if (kDebugMode) {
+      final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
+      pattern.allMatches(text).forEach((match) => print("MEWE_MAPS: $tag: ${match.group(0)}"));
+    }
+  }
+
+  static Future<void> logOnline(String tag, String text, {Map<String, dynamic>? params}) async {
+    LogglyLogger.instance.log(text, tag: tag, params: params);
+    log(tag, text);
   }
 }

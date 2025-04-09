@@ -8,25 +8,15 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
-import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mewe_maps/repositories/storage/storage_repository.dart';
-import 'package:mewe_maps/services/firebase/firebase_initialization.dart';
-import 'package:mewe_maps/utils/loggly_logger.dart';
+part 'loggly_service.g.dart';
 
-Future<void> initializeIsolate() async {
-  WidgetsFlutterBinding.ensureInitialized();
+@RestApi()
+abstract class LogglyService {
+  factory LogglyService(Dio dio, {String baseUrl}) = _LogglyService;
 
-  await dotenv.load(fileName: ".env");
-
-  FlutterError.onError = (details) {
-    FlutterError.dumpErrorToConsole(details);
-    exit(1);
-  };
-
-  initializeLogglyLogger();
-  await initializeFirebase();
-  await StorageRepository.initialize();
+  @POST("inputs/{token}/tag/{tags}/")
+  Future<void> sendLog(@Path("token") String token, @Path("tags") tags, @Body() Map<String, dynamic> logData);
 }

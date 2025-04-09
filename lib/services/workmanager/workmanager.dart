@@ -23,7 +23,7 @@ void workmanagerCallback() async {
   await initializeIsolate();
 
   Workmanager().executeTask((task, inputData) async {
-    Logger.log(_TAG, "executeTask $task");
+    Logger.logOnline(_TAG, "executeTask $task");
 
     if (task == _PERIODIC_SHARE_LOCATION_TASK) {
       await shareMyLocationWithSessions();
@@ -45,10 +45,10 @@ Future<void> registerPeriodicShareMyLocationWithSessions() async {
     _PERIODIC_SHARE_LOCATION_TASK,
     frequency: const Duration(minutes: 15),
   );
-  Logger.log(_TAG, "registerPeriodicShareMyLocationWithSessions success");
+  Logger.logOnline(_TAG, "registerPeriodicShareMyLocationWithSessions success");
 }
 
 Future<void> registerStopPreciseTrackingOnNoSessions() async {
   await Workmanager().registerOneOffTask(_STOP_TRACKING_NO_SESSIONS_TASK, _STOP_TRACKING_NO_SESSIONS_TASK);
-  Logger.log(_TAG, "registerStopPreciseTrackingOnNoSessions success");
+  Logger.logOnline(_TAG, "registerStopPreciseTrackingOnNoSessions success");
 }
