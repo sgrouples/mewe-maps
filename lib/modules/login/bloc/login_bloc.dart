@@ -74,12 +74,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       } on DioException catch (e) {
         if (e.response?.statusCode == 401) {
           emit(state.copyWith(error: "Please accept the MeWe Maps session request in your MeWe account."));
-          await Future.delayed(const Duration(seconds: 10));
+          await Future.delayed(const Duration(seconds: 5));
         }
       } catch (error) {
         rethrow;
       }
-    } while (userResponse == null && retries < 6);
+    } while (userResponse == null && retries < 10);
     return userResponse;
   }
 }
