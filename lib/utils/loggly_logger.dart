@@ -13,9 +13,11 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mewe_maps/models/loggly_log_entry.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/loggly_service.dart';
 import 'package:mewe_maps/utils/logger.dart';
+import 'package:mewe_maps/utils/loggly_cache.dart';
 
 const _TAG = "LogglyLogger";
 
@@ -28,6 +30,7 @@ class LogglyLogger {
 
   LogglyService? _logglyService;
   String? _token;
+  final _logglyCache = LogglyCache();
 
   LogglyLogger._internal();
 
@@ -37,21 +40,34 @@ class LogglyLogger {
     _logglyService = LogglyService(dio, baseUrl: baseUrl);
   }
 
-  void log(String message, {String? tag, String level = 'info', Map<String, dynamic>? params}) {
-    final Map<String, dynamic> payload = {
-      'level': level,
-      'message': message,
-      'userId': StorageRepository.user?.userId,
-      'params': params ?? {},
-    };
+  Future<void> logToCache(String message, {String? tag, String level = 'info', Map<String, dynamic>? params}) {
+    final log = LogglyLogEntry(
+      timestamp: DateTime.now().toUtc().toIso8601String(),
+      level: level,
+      message: message,
+      userId: StorageRepository.user?.userId,
+      tags: createTags(tag),
+      params: params,
+    );
 
-    final tags = createTags(tag).join(',');
+    return _logglyCache.cacheLog(log);
+  }
 
-    _logglyService?.sendLog(_token!, tags, payload).then((_) {
-      Logger.log(_TAG, 'Loggly log sent: $message');
-    }).catchError((error) {
-      Logger.log(_TAG, 'Loggly error: $error');
-    });
+  Future<void> sendLogsToLoggly() async {
+    try {
+      final logs = await _logglyCache.readCachedLogs();
+      if (logs.isNotEmpty) {
+        // send logs in bulk (for 100 logs)
+        for (int i = 0; i < logs.length; i += 100) {
+          final bulk = logs.sublist(i, i + 100 > logs.length ? logs.length : i + 100).join("\n");
+          await _logglyService?.sendLogsInBulk(_token!, bulk);
+        }
+        await _logglyCache.clearCache();
+      }
+      Logger.log(_TAG, "Sent ${logs.length} logs to Loggly");
+    } catch (e) {
+      Logger.log(_TAG, "Error sending logs to Loggly: $e");
+    }
   }
 
   List<String> createTags(String? tag) {

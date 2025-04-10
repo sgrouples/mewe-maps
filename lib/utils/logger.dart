@@ -9,7 +9,9 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 import 'package:flutter/foundation.dart';
-import 'package:mewe_maps/utils/loggly_logger.dart';
+
+import 'loggly_logger.dart';
+
 
 class Logger {
   static bool LOG_DIO = true;
@@ -21,8 +23,20 @@ class Logger {
     }
   }
 
-  static Future<void> logOnline(String tag, String text, {Map<String, dynamic>? params}) async {
-    LogglyLogger.instance.log(text, tag: tag, params: params);
+  static Future<void> logToLogglyCache(String tag, String text, {Map<String, dynamic>? params}) async {
+    try {
+      await LogglyLogger.instance.logToCache(text, tag: tag, params: params);
+    } catch (e) {
+      log(tag, "LogglyLogger error: $e");
+    }
     log(tag, text);
+  }
+
+  static Future<void> sendLogsToLoggly() async {
+    try {
+      await LogglyLogger.instance.sendLogsToLoggly();
+    } catch (e) {
+      log("Logger", "Error sending logs to Loggly: $e");
+    }
   }
 }

@@ -164,7 +164,7 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
 
   @override
   Future<void> uploadPosition(Position position, List<SharingSession> sessions) async {
-    await Logger.logOnline(_TAG, 'Uploading position to ${sessions.length} sessions');
+    await Logger.logToLogglyCache(_TAG, 'Uploading position to ${sessions.length} sessions');
     List<Future> futures = [];
     for (var session in sessions) {
       final data = ShareData(

@@ -17,6 +17,8 @@ part 'loggly_service.g.dart';
 abstract class LogglyService {
   factory LogglyService(Dio dio, {String baseUrl}) = _LogglyService;
 
-  @POST("inputs/{token}/tag/{tags}/")
-  Future<void> sendLog(@Path("token") String token, @Path("tags") tags, @Body() Map<String, dynamic> logData);
+  /// Send logs in bulk to Loggly
+  /// Logs in jsonl format
+  @POST("bulk/{token}/tag/batch/")
+  Future<void> sendLogsInBulk(@Path("token") String token, @Body() String logData);
 }
