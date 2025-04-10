@@ -39,5 +39,4 @@ class LogglyLogEntry {
   factory LogglyLogEntry.fromJson(Map<String, dynamic> json) => _$LogglyLogEntryFromJson(json);
 
   Map<String, dynamic> toJson() => _$LogglyLogEntryToJson(this);
-
 }

@@ -12,7 +12,6 @@ import 'package:flutter/foundation.dart';
 
 import 'loggly_logger.dart';
 
-
 class Logger {
   static bool LOG_DIO = true;
 
