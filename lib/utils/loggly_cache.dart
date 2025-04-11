@@ -12,33 +12,43 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:mewe_maps/models/loggly_log_entry.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:synchronized/synchronized.dart';
 
 class LogglyCache {
   static const _fileName = 'loggly_cache.jsonl';
+  File? _logFile;
+  final Lock _lock = Lock();
 
   Future<File> _getLogFile() async {
     final dir = await getApplicationDocumentsDirectory();
-    return File('${dir.path}/$_fileName');
+    _logFile = File('${dir.path}/$_fileName');
+    return _logFile!;
   }
 
   Future<void> cacheLog(LogglyLogEntry log) async {
-    final file = await _getLogFile();
-    final logLine = '${jsonEncode(log.toJson())}\n';
-    await file.writeAsString(logLine, mode: FileMode.append, flush: true);
+    await _lock.synchronized(() async {
+      final file = _logFile ?? await _getLogFile();
+      final logLine = '${jsonEncode(log.toJson())}\n';
+      await file.writeAsString(logLine, mode: FileMode.append, flush: true);
+    });
   }
 
   Future<List<String>> readCachedLogs() async {
-    final file = await _getLogFile();
-    if (!await file.exists()) return [];
+    return await _lock.synchronized(() async {
+      final file = await _getLogFile();
+      if (!await file.exists()) return [];
 
-    final lines = await file.readAsLines();
-    return lines.toList();
+      final lines = await file.readAsLines();
+      return lines.toList();
+    });
   }
 
   Future<void> clearCache() async {
-    final file = await _getLogFile();
-    if (await file.exists()) {
-      await file.delete();
-    }
+    await _lock.synchronized(() async {
+      final file = _logFile ?? await _getLogFile();
+      if (await file.exists()) {
+        await file.delete();
+      }
+    });
   }
 }

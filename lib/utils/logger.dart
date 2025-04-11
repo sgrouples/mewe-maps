@@ -22,18 +22,18 @@ class Logger {
     }
   }
 
-  static Future<void> logToLogglyCache(String tag, String text, {Map<String, dynamic>? params}) async {
+  static Future<void> saveOnlineLog(String tag, String text, {Map<String, dynamic>? params}) async {
     try {
-      await LogglyLogger.instance.logToCache(text, tag: tag, params: params);
+      await LogglyLogger.instance.log(text, tag: tag, params: params);
     } catch (e) {
       log(tag, "LogglyLogger error: $e");
     }
     log(tag, text);
   }
 
-  static Future<void> sendLogsToLoggly() async {
+  static Future<void> sendOnlineLogs() async {
     try {
-      await LogglyLogger.instance.sendLogsToLoggly();
+      await LogglyLogger.instance.sendPendingLogs();
     } catch (e) {
       log("Logger", "Error sending logs to Loggly: $e");
     }

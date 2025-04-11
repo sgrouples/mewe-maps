@@ -40,20 +40,20 @@ class LogglyLogger {
     _logglyService = LogglyService(dio, baseUrl: baseUrl);
   }
 
-  Future<void> logToCache(String message, {String? tag, String level = 'info', Map<String, dynamic>? params}) {
+  Future<void> log(String message, {String? tag, String level = 'info', Map<String, dynamic>? params}) {
     final log = LogglyLogEntry(
       timestamp: DateTime.now().toUtc().toIso8601String(),
       level: level,
       message: message,
       userId: StorageRepository.user?.userId,
-      tags: createTags(tag),
+      tags: _createTags(tag),
       params: params,
     );
 
     return _logglyCache.cacheLog(log);
   }
 
-  Future<void> sendLogsToLoggly() async {
+  Future<void> sendPendingLogs() async {
     try {
       final logs = await _logglyCache.readCachedLogs();
       if (logs.isNotEmpty) {
@@ -70,7 +70,7 @@ class LogglyLogger {
     }
   }
 
-  List<String> createTags(String? tag) {
+  List<String> _createTags(String? tag) {
     List<String> tags = [];
     if (tag != null) {
       tags.add(tag);
