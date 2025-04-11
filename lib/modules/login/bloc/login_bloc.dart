@@ -10,12 +10,12 @@
 
 import 'package:bloc/bloc.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/repositories/authentication/authentication_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
-import 'package:mewe_maps/services/http/model/challenges_response.dart';
-import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
+import 'package:mewe_maps/services/http/model/signin_response.dart';
 import 'package:mewe_maps/utils/logger.dart';
 
 part 'login_bloc.g.dart';
@@ -27,12 +27,9 @@ const _TAG = 'LoginBloc';
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthenticationRepository _authenticationRepository;
 
-  LoginBloc(this._authenticationRepository)
-      : super(const LoginState(emailOrPhoneNumber: "", password: "", error: "", isLoading: false, user: null, challenge: null)) {
+  LoginBloc(this._authenticationRepository) : super(const LoginState(emailOrPhoneNumber: "", error: "", isLoading: false, user: null)) {
     on<EmailOrPhoneNumberChanged>(_emailOrPhoneNumberChanged);
-    on<PasswordChanged>(_passwordChanged);
     on<LoginSubmitted>(_loginSubmitted);
-    on<ChallengeSubmitted>(_challengeSubmitted);
   }
 
   @override
@@ -46,52 +43,43 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(state.copyWith(emailOrPhoneNumber: event.emailOrPhoneNumber));
   }
 
-  void _passwordChanged(PasswordChanged event, Emitter<LoginState> emit) {
-    emit(state.copyWith(password: event.password));
-  }
-
   void _loginSubmitted(LoginSubmitted event, Emitter<LoginState> emit) async {
-    if (state.emailOrPhoneNumber.isEmpty || state.password.isEmpty) {
-      emit(state.copyWith(error: "Email / Phone Number and Password cannot be empty"));
+    if (state.emailOrPhoneNumber.isEmpty) {
+      emit(state.copyWith(error: "Email / Phone Number cannot be empty"));
     } else {
       emit(state.copyWith(isLoading: true));
       try {
-        final challengesResponse = await _authenticationRepository.getChallenges();
-        if (challengesResponse.challenges.contains(ChallengesResponse.challengeCaptcha)) {
-          emit(state.copyWith(challenge: ChallengesResponse.challengeCaptcha));
-        } else if (challengesResponse.challenges.contains(ChallengesResponse.challengeArkose)) {
-          emit(state.copyWith(challenge: ChallengesResponse.challengeArkose));
-        } else {
-          final LoginWithPasswordResponse loginResponse = await _login(null, null);
-          emit(state.copyWith(error: "", user: loginResponse.user));
-        }
+        final User? user = await _login(emit);
+        emit(state.copyWith(error: "", user: user, isLoading: false));
       } catch (error) {
         emit(state.copyWith(error: error.toString(), isLoading: false));
       }
     }
   }
 
-  void _challengeSubmitted(ChallengeSubmitted event, Emitter<LoginState> emit) async {
-    emit(state.copyWith(challenge: null));
-    try {
-      final LoginWithPasswordResponse loginResponse = await _login(event.challenge, event.challengeToken);
-      emit(state.copyWith(error: "", user: loginResponse.user));
-    } catch (error) {
-      emit(state.copyWith(error: error.toString(), isLoading: false));
-    }
+  Future<User?> _login(Emitter<LoginState> emit) async {
+    String emailOrPhoneNumber = state.emailOrPhoneNumber;
+    final SigninResponse tokenResponse = await _authenticationRepository.signIn(emailOrPhoneNumber);
+    StorageRepository.setLoginToken(tokenResponse.loginRequestToken);
+    return await _getMyUser(emit);
   }
 
-  Future<LoginWithPasswordResponse> _login(String? challenge, String? challengeToken) async {
-    String emailOrPhoneNumber = state.emailOrPhoneNumber;
-    String password = state.password;
-    final LoginWithPasswordResponse loginResponse;
-    if (emailOrPhoneNumber.contains('@')) {
-      loginResponse = await _authenticationRepository.loginByEmail(emailOrPhoneNumber, password, challenge, challengeToken);
-    } else {
-      loginResponse = await _authenticationRepository.loginByNumber(emailOrPhoneNumber, password, challenge, challengeToken);
-    }
-    StorageRepository.setUser(loginResponse.user);
-    StorageRepository.setAuthData(loginResponse.getAuthData());
-    return loginResponse;
+  Future<User?> _getMyUser(Emitter<LoginState> emit) async {
+    User? userResponse;
+    int retries = 0;
+    do {
+      try {
+        userResponse = await _authenticationRepository.getMyUser();
+        StorageRepository.setUser(userResponse);
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401) {
+          emit(state.copyWith(error: "Please accept the MeWe Maps session request in your MeWe account."));
+          await Future.delayed(const Duration(seconds: 5));
+        }
+      } catch (error) {
+        rethrow;
+      }
+    } while (userResponse == null && retries < 10);
+    return userResponse;
   }
 }

@@ -11,22 +11,19 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'login_with_password_request.g.dart';
+part 'signin_response.g.dart';
 
 @JsonSerializable()
-class LoginWithPasswordRequest extends Equatable {
-  const LoginWithPasswordRequest({
-    required this.username,
-    required this.password,
-  });
+class SigninResponse extends Equatable {
+  @JsonKey(name: "loginRequestToken")
+  final String loginRequestToken;
 
-  final String username;
-  final String password;
+  const SigninResponse({required this.loginRequestToken});
 
   @override
-  List<Object> get props => [username, password];
+  List<Object?> get props => [loginRequestToken];
 
-  factory LoginWithPasswordRequest.fromJson(Map<String, dynamic> json) => _$LoginWithPasswordRequestFromJson(json);
+  factory SigninResponse.fromJson(Map<String, dynamic> json) => _$SigninResponseFromJson(json);
 
-  Map<String, dynamic> toJson() => _$LoginWithPasswordRequestToJson(this);
+  Map<String, dynamic> toJson() => _$SigninResponseToJson(this);
 }

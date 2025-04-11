@@ -21,26 +21,7 @@ class EmailOrPhoneNumberChanged extends LoginEvent {
   List<Object?> get props => [emailOrPhoneNumber];
 }
 
-class PasswordChanged extends LoginEvent {
-  final String password;
-
-  PasswordChanged(this.password);
-
-  @override
-  List<Object?> get props => [password];
-}
-
 class LoginSubmitted extends LoginEvent {
   @override
   List<Object?> get props => ['LoginSubmitted'];
-}
-
-class ChallengeSubmitted extends LoginEvent {
-  final String challenge;
-  final String? challengeToken;
-
-  ChallengeSubmitted(this.challenge, this.challengeToken);
-
-  @override
-  List<Object?> get props => [challenge, challengeToken];
 }

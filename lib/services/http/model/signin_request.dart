@@ -11,21 +11,18 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'challenges_response.g.dart';
+part 'signin_request.g.dart';
 
 @JsonSerializable()
-class ChallengesResponse extends Equatable {
-  static const String challengeCaptcha = 'hCaptcha';
-  static const String challengeArkose = 'arkose';
+class SigninRequest extends Equatable {
+  final String username;
 
-  final List<String> challenges;
-
-  const ChallengesResponse({required this.challenges});
+  const SigninRequest({required this.username});
 
   @override
-  List<Object?> get props => [challenges];
+  List<Object?> get props => [username];
 
-  factory ChallengesResponse.fromJson(Map<String, dynamic> json) => _$ChallengesResponseFromJson(json);
+  factory SigninRequest.fromJson(Map<String, dynamic> json) => _$SigninRequestFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ChallengesResponseToJson(this);
+  Map<String, dynamic> toJson() => _$SigninRequestToJson(this);
 }

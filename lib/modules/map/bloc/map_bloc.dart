@@ -178,7 +178,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _openMeWeClicked(OpenMeWeClicked event, Emitter<MapState> emit) async {
-    final url = '${AuthConfig.meweHost}/${event.position.user.publicLinkId}';
+    final url = '${AuthConfig.meweHost}/${event.position.user.handle}';
     final uri = Uri.parse(url);
     await launchUrl(uri);
   }

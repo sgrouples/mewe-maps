@@ -12,10 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mewe_maps/repositories/authentication/authentication_repository.dart';
-import 'package:mewe_maps/services/http/auth_constants.dart';
-import 'package:mewe_maps/services/http/model/challenges_response.dart';
-import 'package:mewe_maps/utils/logger.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../bloc/login_bloc.dart';
 
@@ -29,16 +25,10 @@ class LoginPage extends StatelessWidget {
         context.read<AuthenticationRepository>(),
       ),
       child: BlocListener<LoginBloc, LoginState>(
-        listenWhen: (previous, current) => current.user != null || current.challenge != null,
+        listenWhen: (previous, current) => current.user != null,
         listener: (BuildContext context, LoginState state) {
           if (state.user != null) {
             context.go('/map');
-          } else if (state.challenge != null) {
-            if (state.challenge! == ChallengesResponse.challengeCaptcha) {
-              _showCaptchaChallengeDialog(context);
-            } else if (state.challenge! == ChallengesResponse.challengeArkose) {
-              _showArkoseChallengeDialog(context);
-            }
           }
         },
         child: BlocBuilder<LoginBloc, LoginState>(
@@ -70,18 +60,15 @@ class LoginPage extends StatelessWidget {
                 onChanged: (value) => context.read<LoginBloc>().add(EmailOrPhoneNumberChanged(value)),
                 decoration: const InputDecoration(labelText: "Email / Phone Number"),
               ),
-              TextField(
-                onChanged: (value) => context.read<LoginBloc>().add(PasswordChanged(value)),
-                decoration: const InputDecoration(labelText: "Password"),
-                obscureText: true,
-              ),
+              const SizedBox(height: 20),
+              const Text("You will receive a MeWe Maps session request linked to your MeWe account. Please accept it to continue."),
               const SizedBox(height: 20),
               Stack(
                 alignment: Alignment.center,
                 children: [
                   ElevatedButton(
                     onPressed: state.isLoading ? null : () => context.read<LoginBloc>().add(LoginSubmitted()),
-                    child: const Text("Login"),
+                    child: const Text("Continue"),
                   ),
                   if (state.isLoading)
                     const Positioned(
@@ -95,73 +82,6 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showCaptchaChallengeDialog(BuildContext context) {
-    const challenge = ChallengesResponse.challengeCaptcha;
-    final WebViewController controller = WebViewController();
-    controller.setJavaScriptMode(JavaScriptMode.unrestricted);
-    controller.addJavaScriptChannel(
-      'challengeInitializedHandler',
-      onMessageReceived: (JavaScriptMessage message) {
-        Logger.log("Captcha", "onMessageReceived: ${message.message}");
-      },
-    );
-    controller.addJavaScriptChannel(
-      'challengeHandler',
-      onMessageReceived: (JavaScriptMessage message) {
-        Logger.log("Captcha", "onMessageReceived: ${message.message}");
-        if (message.message != 'init') {
-          context.read<LoginBloc>().add(ChallengeSubmitted(challenge, message.message));
-          Navigator.of(context).pop();
-        }
-      },
-    );
-    controller.loadRequest(Uri.parse(AuthConfig.meweLoginChallengeCaptcha));
-    _showChallengeDialog(context, controller, challenge);
-  }
-
-  void _showArkoseChallengeDialog(BuildContext context) {
-    const challenge = ChallengesResponse.challengeArkose;
-    final WebViewController controller = WebViewController();
-    controller.setJavaScriptMode(JavaScriptMode.unrestricted);
-    controller.addJavaScriptChannel(
-      'FlutterCallback',
-      onMessageReceived: (JavaScriptMessage message) {
-        Logger.log("FlutterCallback", "onMessageReceived: ${message.message}");
-        context.read<LoginBloc>().add(ChallengeSubmitted(challenge, message.message));
-        Navigator.of(context).pop();
-      },
-    );
-    controller.loadFlutterAsset("assets/html/arkose_login.html");
-    _showChallengeDialog(context, controller, challenge);
-  }
-
-  void _showChallengeDialog(BuildContext context, WebViewController controller, String challenge) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          contentPadding: EdgeInsets.zero,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero,
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: WebViewWidget(controller: controller),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                context.read<LoginBloc>().add(ChallengeSubmitted(challenge, null));
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

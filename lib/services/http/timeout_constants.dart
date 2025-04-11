@@ -9,7 +9,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 class Timeouts {
-  static Duration connectTimeout = const Duration(seconds: 5);
-  static Duration sendTimeout = const Duration(seconds: 5);
-  static Duration receiveTimeout = const Duration(seconds: 5);
+  static Duration connectTimeout = const Duration(seconds: 10);
+  static Duration sendTimeout = const Duration(seconds: 10);
+  static Duration receiveTimeout = const Duration(seconds: 10);
 }

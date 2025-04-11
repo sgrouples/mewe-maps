@@ -38,7 +38,7 @@ class MeWeContactsRepository implements ContactsRepository {
             response.list.where((it) => it.follower == true).map((it) => it.user).toList(),
           );
 
-          nextPageUrl = response.halLinks?.nextPage?.href;
+          nextPageUrl = response.nextPage;
         } while (nextPageUrl != null);
       }
       return _cachedContacts!;
