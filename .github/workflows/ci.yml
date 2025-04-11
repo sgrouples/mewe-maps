@@ -64,6 +64,12 @@ jobs:
   ios-build:
     needs: format-check
     runs-on: macos-latest
+    env:
+      APP_STORE_CONNECT_API_KEY_B64: ${{ secrets.APP_STORE_CONNECT_API_KEY_B64 }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -90,11 +96,55 @@ jobs:
         run: |
           echo "${{ secrets.DEFAULTFIREBASEOPTIONS }}" | base64 -d > lib/services/firebase/firebase_options.dart
 
+      - name: Set RUNNER_TEMP variable
+        run: |
+          echo "RUNNER_TEMP=${{ runner.temp }}" >> $GITHUB_ENV
+
+      - name: Install gems
+        run: |
+          cd ./ios
+          bundle install
+
+      - name: Generate provisioning
+        env:
+          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$MATCH_DEPLOY_KEY" > ~/.ssh/match_deploy_key
+          chmod 600 ~/.ssh/match_deploy_key
+          echo "Host github.com
+            HostName github.com
+            IdentityFile ~/.ssh/match_deploy_key
+            StrictHostKeyChecking no" > ~/.ssh/config
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/match_deploy_key
+
+          cd ./ios
+          bundle exec fastlane generate_provisioning
+
+      - name: Decode Firebase Service Credentials files
+        run: |
+          echo "${{ secrets.SERVICE_CREDENTIALS_MASTER_B64 }}" | base64 --decode > ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Code generation
         run: flutter pub run build_runner build
 
-      - name: Build iOS app
-        run: flutter build ios --no-codesign
+      - name: Build iOS
+        env:
+          SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+        run: |
+          cd ./ios
+          bundle exec fastlane set_build_number
+
+          cd ..
+          flutter build ipa --export-options-plist=./ios/ExportOptions.plist --release
+
+      - name: Deploy to App Distribution
+        env:
+          SERVICE_CREDENTIALS_MASTER: ${{ runner.temp }}/service-credentials-mewe-ios-location-master.json
+        run: |
+            cd ./ios
+            bundle exec fastlane upload
