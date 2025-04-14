@@ -9,44 +9,32 @@
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 import 'package:dio/dio.dart';
-import 'package:mewe_maps/services/http/model/challenges_response.dart';
+import 'package:mewe_maps/models/user.dart';
 import 'package:mewe_maps/services/http/model/get_followed_response.dart';
-import 'package:mewe_maps/services/http/model/login_with_password_response.dart';
-import 'package:retrofit/retrofit.dart';
+import 'package:mewe_maps/services/http/model/signin_request.dart';
+import 'package:mewe_maps/services/http/model/signin_response.dart';
+import 'package:retrofit/error_logger.dart';
+import 'package:retrofit/http.dart' as http;
 
 part 'mewe_service.g.dart';
 
-@RestApi()
+@http.RestApi()
 abstract class MeWeService {
   factory MeWeService(Dio dio, {String baseUrl}) = _MeWeService;
 
-  @GET('/api/v2/account/challenges-available')
-  @FormUrlEncoded()
-  Future<ChallengesResponse> getChallenges();
-
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByEmail(@Field() String username, @Field() String password);
-
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByNumber(@Field() String phoneNumber, @Field() String password);
-
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByEmailWithChallenge(
-      @Field() String username, @Field() String password, @Field("challenge_provider") String challenge, @Field("session_token") String challengeToken);
-
-  @POST('/api/v2/auth/login')
-  @FormUrlEncoded()
-  Future<LoginWithPasswordResponse> loginByNumberWithChallenge(
-      @Field() String phoneNumber, @Field() String password, @Field("challenge_provider") String challenge, @Field("session_token") String challengeToken);
-
-  @GET('/api/v2/following/followed')
-  @FormUrlEncoded()
+  @http.GET('/api/dev/socialgraph/followed')
+  @http.Headers({"Content-Type": "application/json"})
   Future<GetFollowedResponse> getFollowed();
 
-  @GET('{nextPageUrl}')
-  @FormUrlEncoded()
-  Future<GetFollowedResponse> getFollowedNextPage(@Path("nextPageUrl") String nextPageUrl);
+  @http.GET('{nextPageUrl}')
+  @http.Headers({"Content-Type": "application/json"})
+  Future<GetFollowedResponse> getFollowedNextPage(@http.Path("nextPageUrl") String nextPageUrl);
+
+  @http.POST('/api/dev/signin')
+  @http.Headers({"Content-Type": "application/json"})
+  Future<SigninResponse> signIn(@http.Body() SigninRequest request);
+
+  @http.GET('/api/dev/me')
+  @http.Headers({"Content-Type": "application/json"})
+  Future<User> getMyUser();
 }

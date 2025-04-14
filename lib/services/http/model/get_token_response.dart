@@ -11,19 +11,20 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'hal_link.g.dart';
+part 'get_token_response.g.dart';
 
 @JsonSerializable()
-class HalLink extends Equatable {
-  @JsonKey(name: "href")
-  final String href;
+class GetTokenResponse extends Equatable {
+  final bool? pending;
+  final String? expiresAt;
+  final String? token;
 
-  const HalLink({required this.href});
+  const GetTokenResponse({this.pending, this.expiresAt, this.token});
 
   @override
-  List<Object?> get props => [href];
+  List<Object?> get props => [pending, expiresAt, token];
 
-  factory HalLink.fromJson(Map<String, dynamic> json) => _$HalLinkFromJson(json);
+  factory GetTokenResponse.fromJson(Map<String, dynamic> json) => _$GetTokenResponseFromJson(json);
 
-  Map<String, dynamic> toJson() => _$HalLinkToJson(this);
+  Map<String, dynamic> toJson() => _$GetTokenResponseToJson(this);
 }

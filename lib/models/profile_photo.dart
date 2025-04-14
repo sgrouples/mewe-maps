@@ -10,31 +10,28 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mewe_maps/services/http/model/cdn_access_params.dart';
+import 'package:mewe_maps/services/http/avatar_href_parser.dart';
 
-part 'auth_data.g.dart';
+part 'profile_photo.g.dart';
 
 @JsonSerializable()
-class AuthData extends Equatable {
-  final String accessToken;
-  final int expires;
-  final int expiresIn;
-  final String refreshToken;
-  final int refreshTokenExpires;
-  final CdnAccessParams cdnAccessParams;
+class ProfilePhoto extends Equatable {
+  @JsonKey(name: "href")
+  final String href;
 
-  const AuthData(
-      {required this.accessToken,
-      required this.expires,
-      required this.expiresIn,
-      required this.refreshToken,
-      required this.refreshTokenExpires,
-      required this.cdnAccessParams});
+  @JsonKey(name: "small")
+  final String small;
+
+  const ProfilePhoto({required this.href, required this.small});
+
+  String avatarUrl() {
+    return AvatarHrefParser.parseAvatarUrl(href);
+  }
 
   @override
-  List<Object?> get props => [accessToken, expires, expiresIn, refreshToken, refreshTokenExpires, cdnAccessParams];
+  List<Object?> get props => [href, small];
 
-  factory AuthData.fromJson(Map<String, dynamic> json) => _$AuthDataFromJson(json);
+  factory ProfilePhoto.fromJson(Map<String, dynamic> json) => _$ProfilePhotoFromJson(json);
 
-  Map<String, dynamic> toJson() => _$AuthDataToJson(this);
+  Map<String, dynamic> toJson() => _$ProfilePhotoToJson(this);
 }
