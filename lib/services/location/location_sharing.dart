@@ -8,6 +8,8 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'dart:ui';
+
 import 'package:mewe_maps/repositories/location/my_location_repository.dart';
 import 'package:mewe_maps/repositories/location/sharing_location_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
@@ -15,7 +17,7 @@ import 'package:mewe_maps/utils/logger.dart';
 
 const String _TAG = "shareMyLocationWithSessions";
 
-Future<bool> shareMyLocationWithSessions() async {
+Future<bool> shareMyLocationWithSessions({VoidCallback? onFinish}) async {
   Logger.log(_TAG, "shareMyLocationWithSessions");
 
   final userId = StorageRepository.user?.userId;
@@ -28,6 +30,7 @@ Future<bool> shareMyLocationWithSessions() async {
       if (sessions != null && sessions.isNotEmpty) {
         await sharingRepository.uploadPosition(lastPosition, sessions);
         Logger.log(_TAG, "success");
+        onFinish?.call();
         return true;
       } else {
         Logger.log(_TAG, "failed (no sessions)");
