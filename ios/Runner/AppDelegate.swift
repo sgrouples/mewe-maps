@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import background_location_tracker
+import workmanager
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -13,6 +14,8 @@ import background_location_tracker
     BackgroundLocationTrackerPlugin.setPluginRegistrantCallback { registry in
         GeneratedPluginRegistrant.register(with: registry)
     }
+
+    WorkmanagerPlugin.registerTask(withIdentifier: "com.mewe.maps.periodicLocationTask")
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
