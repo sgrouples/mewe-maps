@@ -26,7 +26,7 @@ void workmanagerCallback() async {
   await initializeIsolate();
 
   Workmanager().executeTask((task, inputData) async {
-    Logger.log(_TAG, "executeTask $task");
+    await Logger.saveOnlineLog(_TAG, "executeTask $task");
 
     if (task == _PERIODIC_SHARE_LOCATION_TASK) {
       await shareMyLocationWithSessions();
@@ -38,7 +38,7 @@ void workmanagerCallback() async {
       Logger.log(_TAG, "Unknown task: $task");
     }
 
-    return Future.value(true);
+    return Logger.sendOnlineLogs().then((_) => true);
   });
 }
 
@@ -79,5 +79,5 @@ Future<void> registerPeriodicShareTaskOnAndroid() async {
 
 Future<void> registerStopPreciseTrackingOnNoSessions() async {
   await Workmanager().registerOneOffTask(_STOP_TRACKING_NO_SESSIONS_TASK, _STOP_TRACKING_NO_SESSIONS_TASK);
-  Logger.log(_TAG, "registerStopPreciseTrackingOnNoSessions success");
+  await Logger.saveOnlineLog(_TAG, "registerStopPreciseTrackingOnNoSessions success");
 }
