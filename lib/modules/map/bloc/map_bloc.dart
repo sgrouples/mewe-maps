@@ -92,6 +92,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     _observeLocationRequests();
     _startObservingFcmToken();
     emit(state.copyWith(mapInitialized: true));
+    Logger.sendOnlineLogs();
   }
 
   void _observeMyPosition() async {
