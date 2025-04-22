@@ -8,7 +8,6 @@ Before you start make sure that the CI environment is properly configured.
     * APP_STORE_CONNECT_API_KEY_B64
     * KEYCHAIN_PASSWORD
 
-
 run "bundle exec fastlane lanes" to see available lanes.
 =end
 
@@ -28,41 +27,31 @@ tests_devices = ["iPhone 15"]
 commit_file_name = "last_success_commit"
 
 before_all do |options|
-  sh("rm -rf ../build")
-
-  if is_ci
-    unlock_keychain(
-      password: ENV["KEYCHAIN_PASSWORD"]
-    )
-  end
-
-  Dotenv.overload '../build.env'
+  Dotenv.overload '../.env'
 end
 
 desc "Updates certificates and profiles, no options."
 lane :generate_provisioning do
+  if is_ci
+    delete_keychain(name: "tmp") if File.exist? File.expand_path("~/Library/Keychains/tmp-db")
+
+    # it's important to unlock keychain for a longer period
+    # othewise codesign gets stuck without any feedback in logs
+    create_keychain(
+      name: "tmp",
+      password: ENV["KEYCHAIN_PASSWORD"],
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_after_timeout: true
+    )
+  end
+
   sync_match_adhoc()
   sync_match_development()
 end
 
-desc """
-    Builds Location App target.
-
-    ##Options:
-
-    * display_name - will set the Consumer .plist display name.
-    * build_number - will set the Consumer .plist build number.
-    * scheme - scheme to build, default 'Consumer'
-    * configuration - scheme build configuration, default 'AdHoc'
-    * commitMessageKey - key required for the lane to execute
-
-    ##Example: usage:
-
-      bundle exec fastlane build scheme:\"Runner\" build_number:\"1.0.4\"
-    """
-lane :build do |options|
-  skip_docs
-
+lane :set_build_number do
   latest_release = firebase_app_distribution_get_latest_release(
     app: get_firebase_app_id(),
     service_credentials_file: get_service_credentials_file()
@@ -75,19 +64,12 @@ lane :build do |options|
     display_name: get_app_display_name(build_number: build_number),
     build_number: build_number
   )
-
-  build_mewe_maps(
-    scheme: options[:scheme],
-    configuration: options[:configuration]
-  )
 end
 
-lane :upload do |options|
-  scheme = options[:scheme] || "Runner"
-
+lane :upload do
   firebase_app_distribution(
     app: get_firebase_app_id(),
-    ipa_path: "./#{scheme}.ipa",
+    ipa_path: "../build/ios/ipa/MeWe Maps.ipa",
     groups: "ios-internal-testers",
     release_notes: get_changelog(),
     service_credentials_file: get_service_credentials_file()
@@ -95,6 +77,7 @@ lane :upload do |options|
 end
 
 # Match lanes
+
 private_lane :sync_match do |options|
   api_key = app_store_connect_api_key(
     key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
@@ -110,7 +93,9 @@ private_lane :sync_match do |options|
     readonly: options[:readonly],
     app_identifier: options[:app_identifier],
     force_for_new_devices: true,
-    verbose: true
+    verbose: true,
+    keychain_name: "tmp",
+    keychain_password: ENV["KEYCHAIN_PASSWORD"]
   )
 end
 
@@ -119,7 +104,7 @@ lane :sync_match_development do
   sync_match(
     type: "development",
     app_identifier: [
-      "com.mewemaps.testing"
+      "com.locationfinder.testing"
     ],
     readonly: false
   )
@@ -130,7 +115,7 @@ lane :sync_match_adhoc do
   sync_match(
     type: "adhoc",
     app_identifier: [
-      "com.mewemaps.testing"
+      "com.locationfinder.testing"
     ],
     readonly: false
   )
@@ -147,7 +132,7 @@ lane :regenerate_match_development do
     in_house: false
   )
   app_identifier = [
-    "com.mewemaps.testing"
+    "com.locationfinder.testing"
   ]
 
   # nuke distribution certificate and provisioning profile for development
@@ -165,33 +150,36 @@ lane :regenerate_match_development do
   )
 end
 
-# Private build lanes
+desc "Nuke and recreate certificates and provisioning profiles for adhoc"
+lane :regenerate_match_adhoc do
+  api_key = app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_B64"],
+    is_key_content_base64: true,
+    duration: 500,
+    in_house: false
+  )
+  app_identifier = [
+    "com.locationfinder.testing"
+  ]
 
-private_lane :build_mewe_maps do |options|
-  # scheme = options[:scheme] || "Runner"
-  # gym(
-  #   project: "Runner.xcodeproj",
-  #   scheme: scheme,
-  #   configuration: options[:configuration] || "Release",
-  #   build_path: build_path,
-  #   derived_data_path: derived_data_path,
-  #   output_name: "#{scheme}.ipa",
-  #   #include_bitcode: false,
-  #   export_method: "ad-hoc",
-  #   #export_options: {
-  #   #  iCloudContainerEnvironment: "Production",
-  #   #},
-  #   xcodebuild_formatter: "xcbeautify"
-  # )
-  gym(
-      export_method: "ad-hoc",
-      export_options: {
-        provisioningProfiles: {
-          "com.mewemaps.testing" => "match AdHoc com.mewemaps.testing"
-        }
-      }
-    )
+  # nuke distribution certificate and provisioning profile for development
+  match_nuke(
+    type: "adhoc",
+    app_identifier: app_identifier,
+    api_key: api_key
+  )
+
+  # create distribution certificate and provisioning profile for development
+  match(
+    type: "adhoc",
+    app_identifier: app_identifier,
+    api_key: api_key
+  )
 end
+
+# Private build lanes
 
 private_lane :update_project do |options|
   if options[:display_name]
@@ -225,9 +213,9 @@ private_lane :get_service_credentials_file do
   puts "#{Dir.pwd}"
   case build_type()
     when BuildType::MASTER
-      next "#{Dir.pwd}/service-credentials-mewe-ios-location-master.json"
+      next "#{ENV['RUNNER_TEMP']}/service-credentials-mewe-ios-location-master.json"
     else
-      next "#{Dir.pwd}/service-credentials-mewe-ios-location-master.json"
+      next "#{ENV['RUNNER_TEMP']}/service-credentials-mewe-ios-location-master.json"
   end
 end
 

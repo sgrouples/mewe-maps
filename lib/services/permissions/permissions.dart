@@ -8,11 +8,13 @@
 //
 // You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
+import 'dart:io';
+
 import 'package:app_settings/app_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<bool> areAllPermissionsGranted() async {
-  return await Permission.notification.isGranted && await Permission.location.isGranted && await Permission.locationAlways.isGranted;
+  return await Permission.notification.isGranted && await Permission.location.isGranted && (await Permission.locationAlways.isGranted || Platform.isIOS);
 }
 
 Future<bool> requestAllPermissions() async {

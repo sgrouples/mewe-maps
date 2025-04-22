@@ -26,6 +26,7 @@ import 'package:mewe_maps/repositories/location/sharing_location_repository.dart
 import 'package:mewe_maps/repositories/map/hidden_from_map_repository.dart';
 import 'package:mewe_maps/repositories/storage/storage_repository.dart';
 import 'package:mewe_maps/services/http/auth_constants.dart';
+import 'package:mewe_maps/services/location/location_sharing.dart';
 import 'package:mewe_maps/services/location/stop_tracking_on_no_sessions.dart';
 import 'package:mewe_maps/services/permissions/permissions.dart';
 import 'package:mewe_maps/utils/logger.dart';
@@ -169,7 +170,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   void _respondForLocationRequest(RespondForLocationRequest event, Emitter<MapState> emit) async {
     if (event.minutesToShare != null) {
-      _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!);
+      await _sharingLocationRepository.startSharingSession(StorageRepository.user!, event.user, event.minutesToShare!);
+      await shareMyLocationWithSessions();
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
     } else {
       _sharingLocationRepository.cancelRequestForLocationById(event.request.id!);
@@ -177,7 +179,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _openMeWeClicked(OpenMeWeClicked event, Emitter<MapState> emit) async {
-    final url = '${AuthConfig.meweHost}/${event.position.user.publicLinkId}';
+    final url = '${AuthConfig.meweHost}/${event.position.user.handle}';
     final uri = Uri.parse(url);
     await launchUrl(uri);
   }

@@ -99,14 +99,19 @@ class FirestoreSharingLocationRepository implements SharingLocationRepository {
       return cleanedSessions
           .map((session) {
             final data = cleanedSharedData.firstOrNullWhere((element) => element.sessionId == session.id);
-            return ContactSharingData(
-              id: session.id,
-              contactId: session.ownerId,
-              contact: User.fromJson(jsonDecode(session.ownerDataRaw)),
-              shareUntil: session.shareUntil,
-              position: data != null ? Position.fromMap(jsonDecode(data.positionDataRaw)) : null,
-              updatedAt: data?.updatedAt,
-            );
+            try {
+              return ContactSharingData(
+                id: session.id,
+                contactId: session.ownerId,
+                contact: User.fromJson(jsonDecode(session.ownerDataRaw)),
+                shareUntil: session.shareUntil,
+                position: data != null ? Position.fromMap(jsonDecode(data.positionDataRaw)) : null,
+                updatedAt: data?.updatedAt,
+              );
+            } catch (error) {
+              Logger.log(_TAG, 'Failed to map to ContactSharingData. ${error.toString()}');
+              return null;
+            }
           })
           .nonNulls
           .toList();
